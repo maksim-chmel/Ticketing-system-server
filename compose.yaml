@@ -1,0 +1,7 @@
+﻿services:
+  adminpanelback:
+    image: adminpanelback
+    build:
+      context: .
+      dockerfile: AdminPanelBack/Dockerfile
+
