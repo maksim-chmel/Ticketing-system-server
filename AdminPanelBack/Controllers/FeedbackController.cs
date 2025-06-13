@@ -1,8 +1,8 @@
-using AdminPanel.Models;
-using AdminPanel.Services;
+using AdminPanelBack.Models;
+using AdminPanelBack.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AdminPanel.Controllers;
+namespace AdminPanelBack.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

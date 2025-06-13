@@ -1,8 +1,8 @@
-using AdminPanel.DB;
-using AdminPanel.Models;
+using AdminPanelBack.DB;
+using AdminPanelBack.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AdminPanel.Services;
+namespace AdminPanelBack.Services;
 
 public class FeedbackService(AppDbContext dbContext): IFeedbackService
 {

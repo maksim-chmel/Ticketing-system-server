@@ -1,6 +1,6 @@
-using AdminPanel.Models;
+using AdminPanelBack.Models;
 
-namespace AdminPanel.Services;
+namespace AdminPanelBack.Services;
 
 public interface IFeedbackService
 {

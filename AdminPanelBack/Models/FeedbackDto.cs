@@ -1,4 +1,4 @@
-namespace AdminPanel.Models;
+namespace AdminPanelBack.Models;
 
 public class FeedbackDto
 {

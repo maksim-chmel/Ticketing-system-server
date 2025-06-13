@@ -1,5 +1,5 @@
-using AdminPanel.DB;
-using AdminPanel.Services;
+using AdminPanelBack.DB;
+using AdminPanelBack.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

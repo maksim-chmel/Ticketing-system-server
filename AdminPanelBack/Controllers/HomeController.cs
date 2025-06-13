@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace AdminPanel.Controllers;
+namespace AdminPanelBack.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class HomeController : ControllerBase

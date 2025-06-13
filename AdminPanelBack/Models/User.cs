@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace AdminPanel.Models;
+namespace AdminPanelBack.Models;
 
 public class User
 {

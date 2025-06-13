@@ -1,7 +1,7 @@
-using AdminPanel.Models;
+using AdminPanelBack.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AdminPanel.DB;
+namespace AdminPanelBack.DB;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
