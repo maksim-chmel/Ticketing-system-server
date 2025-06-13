@@ -1,7 +1,11 @@
-﻿services:
-  adminpanelback:
-    image: adminpanelback
+﻿version: '3.8'
+
+services:
+  adminpanel-back:
     build:
       context: .
-      dockerfile: AdminPanelBack/Dockerfile
-
+      dockerfile: Dockerfile
+    container_name: adminpanel-back
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

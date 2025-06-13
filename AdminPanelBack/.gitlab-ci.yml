@@ -1,0 +1,21 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - deploy
+
+before_script:
+  - docker info
+
+deploy:
+  stage: deploy
+  script:
+    - docker compose down
+    - docker compose up -d --build
+  only:
+    - main
