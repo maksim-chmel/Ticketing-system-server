@@ -7,5 +7,5 @@ services:
       dockerfile: Dockerfile
     container_name: adminpanel-back
     ports:
-      - "8080:8080"
+      - "8082:8080"
     restart: unless-stopped
