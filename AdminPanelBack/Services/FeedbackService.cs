@@ -22,4 +22,13 @@ public class FeedbackService(AppDbContext dbContext): IFeedbackService
        return feedbacks;
     }
     
+    public async Task MakeDone(int feedbackId)
+    {
+        var feedback = await dbContext.Feedbacks.FindAsync(feedbackId);
+        if (feedback != null)
+        {
+            feedback.IsDone = true;
+            await dbContext.SaveChangesAsync();
+        }
+    }
 }
