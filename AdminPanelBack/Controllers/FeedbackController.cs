@@ -14,7 +14,7 @@ public class FeedbackController(IFeedbackService feedbackService) : ControllerBa
         var feedbacks = await feedbackService.GetAllFeedbacksAsync();
         return Ok(feedbacks);
     }
-    [HttpPut("make-done/{feedbackId}")]
+    [HttpPost("make-done/{feedbackId}")]
     public async Task<ActionResult> MakeDone(int feedbackId)
     {
        await feedbackService.MakeDone(feedbackId);
