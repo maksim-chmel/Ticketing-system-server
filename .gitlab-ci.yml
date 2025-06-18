@@ -16,6 +16,8 @@ deploy:
   stage: deploy
   script:
     - docker compose down
-    - docker compose up -d --build
+    - docker compose pull || true  # подтянуть образы, если используются из реестра
+    - docker compose up -d --build --remove-orphans
+    - docker system prune -f  # очистка ненужных образов и контейнеров, опционально
   only:
     - main
