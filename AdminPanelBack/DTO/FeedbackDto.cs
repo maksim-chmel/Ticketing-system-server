@@ -1,4 +1,4 @@
-namespace AdminPanelBack.Models;
+namespace AdminPanelBack.DTO;
 
 public class FeedbackDto
 {
@@ -8,5 +8,6 @@ public class FeedbackDto
     public string? Username { get; set; }
     public string? Phone { get; set; }
     public DateTime Date { get; set; }
-    public int Status { get; set; }
+    public FeedbackStatus Status { get; set; }
+   
 }

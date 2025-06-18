@@ -14,10 +14,10 @@ public class FeedbackController(IFeedbackService feedbackService) : ControllerBa
         var feedbacks = await feedbackService.GetAllFeedbacksAsync();
         return Ok(feedbacks);
     }
-    [HttpPost("make-done/{feedbackId}")]
-    public async Task<ActionResult> MakeDone(int feedbackId)
+    [HttpPost("update-status/{id}")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromQuery] FeedbackStatus status)
     {
-       await feedbackService.MakeDone(feedbackId);
+       await feedbackService.UpdateStatus(id , status);
        return Ok();
     }
 }

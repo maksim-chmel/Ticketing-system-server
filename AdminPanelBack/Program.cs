@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
 // Подключаем контроллеры
 builder.Services.AddControllers();

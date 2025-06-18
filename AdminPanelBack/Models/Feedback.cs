@@ -7,6 +7,6 @@ public class Feedback
     public User User { get; set; }
     public string Comment { get; set; }
     public DateTime CreatedDate { get; set; } =DateTime.Now;
-    public int Status { get; set; } = 1;
-    public bool IsDone { get; set; }
+    public FeedbackStatus Status { get; set; }
+   
 }

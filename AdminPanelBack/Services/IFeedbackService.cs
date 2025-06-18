@@ -1,3 +1,4 @@
+using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
 
 namespace AdminPanelBack.Services;
@@ -5,5 +6,6 @@ namespace AdminPanelBack.Services;
 public interface IFeedbackService
 {
    public Task<List<FeedbackDto>> GetAllFeedbacksAsync();
-   public Task MakeDone(int feedbackId);
+   public Task UpdateStatus(int feedbackId , FeedbackStatus status);
+ 
 }
