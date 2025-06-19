@@ -6,16 +6,30 @@ using Microsoft.Extensions.Configuration;
 
 namespace AdminPanelBack
 {
-    public class TokenService(IConfiguration configuration)
+    public class TokenService
     {
-        private readonly string _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
-                                             ?? configuration["JwtSettings:SecretKey"] 
-                                             ?? throw new ArgumentNullException("SecretKey");
-        private readonly string _issuer = configuration["JwtSettings:Issuer"] ?? throw new ArgumentNullException("Issuer");
-        private readonly string _audience = configuration["JwtSettings:Audience"] ?? throw new ArgumentNullException("Audience");
-        private readonly int _expiresInMinutes = int.Parse(configuration["JwtSettings:ExpiresInMinutes"] ?? "60");
+        private readonly string _secretKey;
+        private readonly string _issuer;
+        private readonly string _audience;
+        private readonly int _expiresInMinutes;
 
-        // Получаем секретный ключ из переменной окружения, если нет — из конфига
+        public TokenService(IConfiguration configuration)
+        {
+            // Сначала пробуем взять секретный ключ из переменной окружения
+            var envKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+
+            // Если переменная окружения пуста — берём из конфигурации
+            _secretKey = !string.IsNullOrWhiteSpace(envKey)
+                ? envKey
+                : configuration["JwtSettings:SecretKey"]
+                  ?? throw new ArgumentNullException("SecretKey", "JWT_SECRET_KEY и JwtSettings:SecretKey не заданы");
+
+            _issuer = configuration["JwtSettings:Issuer"] ?? throw new ArgumentNullException("Issuer");
+            _audience = configuration["JwtSettings:Audience"] ?? throw new ArgumentNullException("Audience");
+            _expiresInMinutes = int.TryParse(configuration["JwtSettings:ExpiresInMinutes"], out int minutes)
+                ? minutes
+                : 60; // Значение по умолчанию
+        }
 
         public string GenerateToken(string userId, string username)
         {
