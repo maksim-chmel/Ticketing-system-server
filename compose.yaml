@@ -9,4 +9,6 @@ services:
     ports:
       - "5101:8080"
     restart: unless-stopped
+    environment:
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     
