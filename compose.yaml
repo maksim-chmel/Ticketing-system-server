@@ -1,4 +1,4 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   adminpanel-back:
@@ -11,4 +11,5 @@ services:
     restart: unless-stopped
     environment:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-    
+    env_file:
+      - .env 
