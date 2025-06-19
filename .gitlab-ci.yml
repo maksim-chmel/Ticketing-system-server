@@ -16,8 +16,9 @@ deploy:
   stage: deploy
   script:
     - docker compose down
-    - docker compose pull || true  # подтянуть образы, если используются из реестра
+    - docker compose pull || true  
+    - export JWT_SECRET_KEY="$JWT_SECRET_KEY"
     - docker compose up -d --build --remove-orphans
-    - docker system prune -f  # очистка ненужных образов и контейнеров, опционально
+    - docker system prune -f 
   only:
     - main
