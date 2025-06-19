@@ -15,10 +15,20 @@ before_script:
 deploy:
   stage: deploy
   script:
+    # Створюємо .env файл зі змінної середовища GitLab
+    - echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" > .env
+
+    # Зупиняємо попередній контейнер, якщо є
     - docker compose down
+
+    # Спроба оновити образ (опціонально, щоб уникнути помилок якщо не знайдено)
     - docker compose pull || true  
-    - export JWT_SECRET_KEY="$JWT_SECRET_KEY"
+
+    # Стартуємо з білдом, використовуючи .env
     - docker compose up -d --build --remove-orphans
+
+    # Очищення системи
     - docker system prune -f 
+
   only:
     - main
