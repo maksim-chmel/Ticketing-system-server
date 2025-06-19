@@ -1,8 +1,10 @@
 using AdminPanelBack.Models;
 using AdminPanelBack.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
+[Authorize]
 
 [ApiController]
 [Route("api/[controller]")]
