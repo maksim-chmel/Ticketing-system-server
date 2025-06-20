@@ -1,25 +1,30 @@
+using AdminPanelBack.Models;
+using AdminPanelBack.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(
+    UserManager<Admin> userManager,
+    SignInManager<Admin> signInManager,
+    TokenService tokenService)
+    : ControllerBase
 {
-    private readonly TokenService _tokenService;
-
-    public AuthController(TokenService tokenService)
-    {
-        _tokenService = tokenService;
-    }
-
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (UsersStore.Users.TryGetValue(request.Username, out var password) && password == request.Password)
-        {
-            var token = _tokenService.GenerateToken(request.Username, request.Username);
-            return Ok(new { token });
-        }
-        return Unauthorized();
+        var user = await userManager.FindByNameAsync(request.Username);
+        if (user == null)
+            return Unauthorized(new { message = "User not found" });
+
+        var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+        if (!result.Succeeded)
+            return Unauthorized(new { message = "Invalid credentials" });
+
+        var token = tokenService.GenerateToken(user.Id, user.UserName);
+        return Ok(new { token });
     }
 }

@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Configuration;
 
 namespace AdminPanelBack
 {
@@ -13,22 +12,17 @@ namespace AdminPanelBack
         private readonly string _audience;
         private readonly int _expiresInMinutes;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService()
         {
-            // Сначала пробуем взять секретный ключ из переменной окружения
-            var envKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
-
-            // Если переменная окружения пуста — берём из конфигурации
-            _secretKey = !string.IsNullOrWhiteSpace(envKey)
-                ? envKey
-                : configuration["JwtSettings:SecretKey"]
-                  ?? throw new ArgumentNullException("SecretKey", "JWT_SECRET_KEY и JwtSettings:SecretKey не заданы");
-
-            _issuer = configuration["JwtSettings:Issuer"] ?? throw new ArgumentNullException("Issuer");
-            _audience = configuration["JwtSettings:Audience"] ?? throw new ArgumentNullException("Audience");
-            _expiresInMinutes = int.TryParse(configuration["JwtSettings:ExpiresInMinutes"], out int minutes)
-                ? minutes
-                : 60; // Значение по умолчанию
+            _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                         ?? throw new Exception("JWT_SECRET_KEY not set");
+            _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+                      ?? throw new Exception("JWT_ISSUER not set");
+            _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                        ?? throw new Exception("JWT_AUDIENCE not set");
+            var expiresStr = Environment.GetEnvironmentVariable("JWT_EXPIRES_IN_MINUTES")
+                             ?? throw new Exception("JWT_EXPIRES_IN_MINUTES not set");
+            _expiresInMinutes = int.Parse(expiresStr);
         }
 
         public string GenerateToken(string userId, string username)

@@ -15,20 +15,14 @@ before_script:
 deploy:
   stage: deploy
   script:
-    # Створюємо .env файл зі змінної середовища GitLab
     - echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" > .env
+    - echo "JWT_ISSUER=$JWT_ISSUER" >> .env
+    - echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> .env
+    - echo "DefaultConnection=$DefaultConnection" >> .env
 
-    # Зупиняємо попередній контейнер, якщо є
     - docker compose down
-
-    # Спроба оновити образ (опціонально, щоб уникнути помилок якщо не знайдено)
-    - docker compose pull || true  
-
-    # Стартуємо з білдом, використовуючи .env
+    - docker compose pull || true
     - docker compose up -d --build --remove-orphans
-
-    # Очищення системи
-    - docker system prune -f 
-
+    - docker system prune -f
   only:
     - main

@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace AdminPanelBack.Models;
 
-public class Admin
+public class Admin:IdentityUser
 {
-    [Key]
-    public long UserId { get; set; }               
-    public string Username { get; set; }           
-    public string PasswordHash { get; set; }      
+    public string Name { get; set; }     
 }

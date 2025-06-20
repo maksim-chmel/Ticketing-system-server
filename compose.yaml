@@ -10,6 +10,9 @@ services:
       - "5101:8080"
     restart: unless-stopped
     environment:
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT__SecretKey=${JWT_SECRET_KEY}
+      - JWT__Issuer=${JWT_ISSUER}
+      - JWT__Audience=${JWT_AUDIENCE}
+      - DefaultConnection=${DefaultConnection}
     env_file:
       - .env 

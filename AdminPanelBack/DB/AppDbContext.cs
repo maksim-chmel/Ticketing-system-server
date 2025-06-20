@@ -1,23 +1,19 @@
 using AdminPanelBack.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.DB;
-
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : IdentityDbContext<Admin>(options)
 {
     public DbSet<User> Users { get; set; }
-    public DbSet<Admin> Admins { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Admin>(entity =>
-        {
-            entity.HasKey(a => a.UserId);
-            entity.HasIndex(a => a.Username).IsUnique();
-            entity.Property(a => a.Username).IsRequired();
-            entity.Property(a => a.PasswordHash).IsRequired();
-        });
+        // ОБОВ'ЯЗКОВО!
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<User>()
             .HasKey(u => u.UserId);
 
@@ -28,6 +24,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(f => f.User)
             .WithMany(u => u.Feedbacks)
             .HasForeignKey(f => f.UserId)
-            .OnDelete(DeleteBehavior.Cascade); 
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
