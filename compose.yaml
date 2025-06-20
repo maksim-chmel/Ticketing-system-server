@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   adminpanel-back:
     build:
       context: .
@@ -10,9 +8,9 @@ services:
       - "5101:8080"
     restart: unless-stopped
     environment:
-      - JWT__SecretKey=${JWT_SECRET_KEY}
-      - JWT__Issuer=${JWT_ISSUER}
-      - JWT__Audience=${JWT_AUDIENCE}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ISSUER=${JWT_ISSUER}
+      - JWT_AUDIENCE=${JWT_AUDIENCE}
       - DefaultConnection=${DefaultConnection}
     env_file:
       - .env 
