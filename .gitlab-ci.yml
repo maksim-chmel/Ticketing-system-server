@@ -15,14 +15,23 @@ before_script:
 deploy:
   stage: deploy
   script:
+    # Создаем .env файл из переменных окружения GitLab
     - echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" > .env
     - echo "JWT_ISSUER=$JWT_ISSUER" >> .env
     - echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> .env
     - echo "DefaultConnection=$DefaultConnection" >> .env
 
+    # Остановка текущего контейнера (если есть)
     - docker compose down
+
+    # Обновление образа (если есть, чтобы избежать ошибок)
     - docker compose pull || true
+
+    # Запуск с билдом, используя .env
     - docker compose up -d --build --remove-orphans
+
+    # Очистка системы
     - docker system prune -f
+
   only:
     - main
