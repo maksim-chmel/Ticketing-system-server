@@ -3,6 +3,7 @@ using AdminPanelBack;
 using AdminPanelBack.DB;
 using AdminPanelBack.Models;
 using AdminPanelBack.Services;
+using AdminPanelBack.Services.TokenServices;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -28,16 +29,21 @@ builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ITokenService,TokenService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+builder.Services.AddScoped<IRefreshTokenService,RefreshTokenService>();
 
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        policy
+            .WithOrigins("http://localhost:3000") // 👈 замени на адрес фронта
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // 👈 разрешает куки/авторизацию
     });
 });
 
@@ -95,10 +101,10 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate(); 
     await SeedAdmin.SeedAdminAsync(userManager, roleManager);
 }
-
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowAll");
+
 
 if (app.Environment.IsDevelopment())
 {

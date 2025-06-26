@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AdminPanelBack
+namespace AdminPanelBack.Services.TokenServices
 {
-    public class TokenService
+    public class TokenService:ITokenService
     {
         private readonly string _secretKey;
         private readonly string _issuer;
