@@ -40,7 +40,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000") // 👈 замени на адрес фронта
+            .WithOrigins("http://100.70.1.11:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // 👈 разрешает куки/авторизацию
