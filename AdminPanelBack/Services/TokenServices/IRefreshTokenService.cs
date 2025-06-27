@@ -1,5 +1,3 @@
-using AdminPanelBack.DTO;
-
 namespace AdminPanelBack.Services.TokenServices;
 
 public interface IRefreshTokenService

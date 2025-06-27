@@ -12,7 +12,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // ОБОВ'ЯЗКОВО!
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<User>()

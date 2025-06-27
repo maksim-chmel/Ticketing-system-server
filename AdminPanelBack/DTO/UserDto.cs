@@ -1,12 +1,11 @@
-namespace AdminPanelBack.Models;
+namespace AdminPanelBack.DTO;
 
-public class User
+public class UserDto
 {
     public long UserId { get; set; }
     public string Phone { get; set; }
     public string FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Username { get; set; }
-    public List<Feedback> Feedbacks { get; set; }
     public string? Comments { get; set; }
 }

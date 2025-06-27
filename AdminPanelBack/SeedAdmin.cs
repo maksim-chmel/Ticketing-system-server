@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AdminPanelBack;
 
-public class SeedAdmin
+public static class SeedAdmin
 {
    public static async Task SeedAdminAsync(UserManager<Admin> userManager, RoleManager<IdentityRole> roleManager)
     {

@@ -1,6 +1,0 @@
-@AdminPanelBack_HostAddress = http://localhost:5101
-
-GET {{AdminPanelBack_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -2,6 +2,8 @@ using System.Text;
 using AdminPanelBack;
 using AdminPanelBack.DB;
 using AdminPanelBack.Models;
+using AdminPanelBack.Profiles;
+using AdminPanelBack.Repository;
 using AdminPanelBack.Services;
 using AdminPanelBack.Services.TokenServices;
 using DotNetEnv;
@@ -33,7 +35,12 @@ builder.Services.AddScoped<ITokenService,TokenService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<IRefreshTokenService,RefreshTokenService>();
-
+builder.Services.AddScoped<IFeedbackRepository,FeedbackRepository>();
+builder.Services.AddScoped<IStatisticsRepository,StatisticsRepository>();
+builder.Services.AddScoped<IUserRepository,UserRepository>();
+builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddAutoMapper(typeof(FeedbackProfile));
+builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
@@ -43,11 +50,10 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://100.70.1.11:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials(); // 👈 разрешает куки/авторизацию
+            .AllowCredentials();
     });
 });
 
-// Загружаем настройки из ENV вручную
 var jwtSettings = new JwtSettings
 {
     SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? throw new Exception("JWT_SECRET_KEY not set"),
@@ -56,7 +62,6 @@ var jwtSettings = new JwtSettings
     ExpiresInMinutes = int.TryParse(Environment.GetEnvironmentVariable("JWT_EXPIRES_IN_MINUTES"), out var exp) ? exp : 60
 };
 
-// Добавляем в DI
 builder.Services.Configure<JwtSettings>(options =>
 {
     options.SecretKey = jwtSettings.SecretKey;
@@ -65,7 +70,6 @@ builder.Services.Configure<JwtSettings>(options =>
     options.ExpiresInMinutes = jwtSettings.ExpiresInMinutes;
 });
 
-// JWT Auth
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -90,7 +94,6 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Миграции и создание админа
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

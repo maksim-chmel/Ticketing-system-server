@@ -1,4 +1,4 @@
-namespace AdminPanelBack;
+namespace AdminPanelBack.Models;
 
 public class LoginRequest
 {

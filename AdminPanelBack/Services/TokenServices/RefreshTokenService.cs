@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using AdminPanelBack.DB;
-using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,9 +22,6 @@ public class RefreshTokenService(AppDbContext db):IRefreshTokenService
 
         return token;
     }
-
-    
-
     public async Task<bool> ValidateRefreshTokenAsync(string token, string userId)
     {
         var found = await db.RefreshTokens
