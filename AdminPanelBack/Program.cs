@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Prometheus;
 using Serilog;
 
 Env.Load(); 
@@ -99,6 +100,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -111,11 +113,13 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate(); 
     await SeedAdmin.SeedAdminAsync(userManager, roleManager);
 }
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+app.UseMetricServer();    // запускает /metrics
+app.UseHttpMetrics(); 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
