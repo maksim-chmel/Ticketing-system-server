@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 
 Env.Load(); 
 Console.WriteLine("JWT_SECRET_KEY = " + Environment.GetEnvironmentVariable("JWT_SECRET_KEY"));
@@ -91,7 +92,13 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.Seq("http://100.70.1.11:5341") 
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
+builder.Host.UseSerilog();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
