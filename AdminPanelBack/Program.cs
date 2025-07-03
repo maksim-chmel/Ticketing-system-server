@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Prometheus;
 using Serilog;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 
 Env.Load(); 
 Console.WriteLine("JWT_SECRET_KEY = " + Environment.GetEnvironmentVariable("JWT_SECRET_KEY"));
@@ -71,7 +73,16 @@ builder.Services.Configure<JwtSettings>(options =>
     options.Audience = jwtSettings.Audience;
     options.ExpiresInMinutes = jwtSettings.ExpiresInMinutes;
 });
-
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MyAspNetApp"))
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter();
+    });
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -113,7 +124,7 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate(); 
     await SeedAdmin.SeedAdminAsync(userManager, roleManager);
 }
-
+app.UseOpenTelemetryPrometheusScrapingEndpoint(); 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
