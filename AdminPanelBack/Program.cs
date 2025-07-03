@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://100.70.1.11:8080") 
+            .WithOrigins("http://it-help.almi.odesa.ua:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -118,7 +118,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMetricServer();    // запускает /metrics
+app.UseMetricServer();    
 app.UseHttpMetrics(); 
 if (app.Environment.IsDevelopment())
 {
