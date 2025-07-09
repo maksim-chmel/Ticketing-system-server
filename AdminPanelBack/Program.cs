@@ -43,6 +43,8 @@ builder.Services.AddScoped<IFeedbackRepository,FeedbackRepository>();
 builder.Services.AddScoped<IStatisticsRepository,StatisticsRepository>();
 builder.Services.AddScoped<IUserRepository,UserRepository>();
 builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
+builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddControllers();

@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<User> Users { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<BroadcastMessage> BroadcastMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
