@@ -34,4 +34,52 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Repository\StatisticsRepository.cs">
+        <DependentUpon>IStatisticsRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\BroadcastMessageRepository.cs">
+        <DependentUpon>IBroadcastMessageRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\FeedbackRepository.cs">
+        <DependentUpon>IFeedbackRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\Repository.cs">
+        <DependentUpon>IRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\UserRepository.cs">
+        <DependentUpon>IUserRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Auth\AuthService.cs">
+        <DependentUpon>IAuthService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Broadcast\BroadcastMessageService.cs">
+        <DependentUpon>IBroadcastMessageService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Feedback\FeedbackService.cs">
+        <DependentUpon>IFeedbackService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Login\LoginService.cs">
+        <DependentUpon>ILoginService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Statistic\StatisticsService.cs">
+        <DependentUpon>IStatisticsService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Token\RefreshTokenService.cs">
+        <DependentUpon>IRefreshTokenService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Token\TokenService.cs">
+        <DependentUpon>ITokenService.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\User\UserService.cs">
+        <DependentUpon>IUserService.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="appsettings.Development.json">
+        <DependentUpon>appsettings.json</DependentUpon>
+      </Content>
+    </ItemGroup>
+
 </Project>
