@@ -1,7 +1,7 @@
 using AdminPanelBack.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Auth;
 
 public class AuthService(ILogger<AuthService> logger,UserManager<Admin> userManager) : IAuthService
 {

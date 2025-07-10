@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AdminPanelBack.Services.TokenServices
+namespace AdminPanelBack.Services.Token
 {
     public class TokenService:ITokenService
     {

@@ -1,7 +1,7 @@
 using AdminPanelBack.DTO;
 using AdminPanelBack.Repository;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Statistic;
 
 public class StatisticsService(IStatisticsRepository repository):IStatisticsService
 {

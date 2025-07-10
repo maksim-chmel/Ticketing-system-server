@@ -2,7 +2,7 @@ using AdminPanelBack.DTO;
 using AdminPanelBack.Repository;
 using AutoMapper;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Feedback;
 
 public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFeedbackService
 {

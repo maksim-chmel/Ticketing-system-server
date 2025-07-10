@@ -1,4 +1,4 @@
-namespace AdminPanelBack;
+namespace AdminPanelBack.Services.Feedback;
 
 public enum FeedbackStatus
 {

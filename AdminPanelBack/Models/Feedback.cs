@@ -1,3 +1,5 @@
+using AdminPanelBack.Services.Feedback;
+
 namespace AdminPanelBack.Models;
 
 public class Feedback

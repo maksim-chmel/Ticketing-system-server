@@ -3,7 +3,7 @@ using AdminPanelBack.DB;
 using AdminPanelBack.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AdminPanelBack.Services.TokenServices;
+namespace AdminPanelBack.Services.Token;
 public class RefreshTokenService(AppDbContext db):IRefreshTokenService
 {
     public async Task<string> CreateRefreshTokenAsync(string userId)
@@ -38,6 +38,19 @@ public class RefreshTokenService(AppDbContext db):IRefreshTokenService
             existing.IsRevoked = true;
             await db.SaveChangesAsync();
         }
+    }
+    public async Task RevokeAllUserTokensAsync(string userId)
+    {
+        var tokens = await db.RefreshTokens
+            .Where(t => t.UserId == userId && !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
+
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+        }
+
+        await db.SaveChangesAsync();
     }
 
     public async Task<RefreshToken> GetRefreshToken(string refreshToken)

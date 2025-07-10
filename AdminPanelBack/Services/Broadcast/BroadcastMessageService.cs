@@ -1,7 +1,7 @@
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Broadcast;
 
 public class BroadcastMessageService(IBroadcastMessageRepository repository) : IBroadcastMessageService
 {

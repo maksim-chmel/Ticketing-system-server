@@ -1,4 +1,4 @@
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Broadcast;
 
 public interface IBroadcastMessageService
 {

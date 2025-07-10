@@ -1,6 +1,6 @@
 using AdminPanelBack.DTO;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Statistic;
 
 public interface IStatisticsService
 {

@@ -1,4 +1,4 @@
-namespace AdminPanelBack.Services.TokenServices;
+namespace AdminPanelBack.Services.Token;
 
 public interface ITokenService
 {

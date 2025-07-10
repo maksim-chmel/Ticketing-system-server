@@ -1,6 +1,6 @@
 using AdminPanelBack.Models;
 
-namespace AdminPanelBack.Services;
+namespace AdminPanelBack.Services.Auth;
 
 public interface IAuthService
 {
