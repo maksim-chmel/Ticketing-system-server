@@ -1,6 +1,7 @@
 using System.Text;
 using AdminPanelBack;
 using AdminPanelBack.DB;
+using AdminPanelBack.Middleware;
 using AdminPanelBack.Models;
 using AdminPanelBack.Profiles;
 using AdminPanelBack.Repository;
@@ -36,6 +37,8 @@ builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<ITokenService,TokenService>();
+builder.Services.AddScoped<IAuthService,AuthService>();
+builder.Services.AddScoped<ILoginService,LoginService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 builder.Services.AddScoped<IRefreshTokenService,RefreshTokenService>();
@@ -126,6 +129,7 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate(); 
     await SeedAdmin.SeedAdminAsync(userManager, roleManager);
 }
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseOpenTelemetryPrometheusScrapingEndpoint(); 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();

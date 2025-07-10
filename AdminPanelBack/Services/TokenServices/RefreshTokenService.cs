@@ -39,5 +39,12 @@ public class RefreshTokenService(AppDbContext db):IRefreshTokenService
             await db.SaveChangesAsync();
         }
     }
+
+    public async Task<RefreshToken> GetRefreshToken(string refreshToken)
+    {
+       return await db.RefreshTokens
+            .FirstOrDefaultAsync(t => t.Token == refreshToken && !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow);
+
+    }
     
 }
