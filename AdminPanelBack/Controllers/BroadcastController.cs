@@ -1,3 +1,4 @@
+using AdminPanelBack.Models;
 using AdminPanelBack.Services;
 using AdminPanelBack.Services.Broadcast;
 using Microsoft.AspNetCore.Mvc;
@@ -8,14 +9,14 @@ namespace AdminPanelBack.Controllers;
 public class BroadcastController(IBroadcastMessageService service) : ControllerBase
 {
     [HttpPost("add-broadcastMessage")]
-    public async Task<IActionResult> AddBroadcastMessage([FromBody] string message)
+    public async Task<IActionResult> AddBroadcastMessage([FromBody] BroadcastMessage request)
     {
-        if (string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(request.Message))
         {
             return BadRequest("Сообщение не может быть пустым.");
         }
 
-        await service.CreateBroadcastMessage(message);
+        await service.CreateBroadcastMessage(request.Message);
         return Ok("Сообщение успешно добавлено в очередь.");
     }
 }
