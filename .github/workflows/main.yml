@@ -10,13 +10,27 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pull latest backend code and restart containers
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Pull latest backend code
         run: |
           cd ~/AdminPanelBack
           git pull origin main
-          
+
+      - name: Inject secrets into .env file
+        run: |
+          cd ~/AdminPanelBack
+          cat <<EOF > .env
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          JWT_ISSUER=${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
+          DefaultConnection=${{ secrets.DefaultConnection }}
+          EOF
+
+      - name: Restart Docker containers
+        run: |
+          cd ~/AdminPanelBack
           docker rm -f adminpanel-back || true
-          
           docker compose down
-          
           docker compose up -d --build
