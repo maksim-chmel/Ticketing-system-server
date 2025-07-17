@@ -62,7 +62,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://it-help.almi.odesa.ua:8080") 
+            .WithOrigins("http://100.70.1.24:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -117,7 +117,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.Seq("http://100.70.1.11:5341") 
+    .WriteTo.Seq("http://100.70.1.24:5341") 
     .Enrich.FromLogContext()
     .CreateLogger();
 
