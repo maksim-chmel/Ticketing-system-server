@@ -25,6 +25,7 @@ jobs:
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
           JWT_ISSUER=${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
+          JWT_EXPIRES_IN_MINUTES=${{ secrets.JWT_EXPIRES_IN_MINUTES }}
           DefaultConnection=${{ secrets.DefaultConnection }}
           EOF
 
