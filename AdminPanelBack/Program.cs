@@ -62,7 +62,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://helpalm.varit.xyz:8080") 
+            .WithOrigins("https://helpalm.varit.xyz:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
