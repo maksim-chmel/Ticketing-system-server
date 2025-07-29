@@ -57,7 +57,7 @@ builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageReposito
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddControllers();
-builder.Services.AddCors(options =>
+/*builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
@@ -67,6 +67,11 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials();
     });
+});
+*/
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5101);
 });
 
 var jwtSettings = new JwtSettings
