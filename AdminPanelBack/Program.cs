@@ -62,17 +62,19 @@ builder.Services.AddControllers();
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://helpalm.varit.xyz:8080") 
+            .WithOrigins("http://localhost:8080") 
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
     });
 });
 */
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenLocalhost(5101);
 });
+
 
 var jwtSettings = new JwtSettings
 {
@@ -142,7 +144,7 @@ using (var scope = app.Services.CreateScope())
 }
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseOpenTelemetryPrometheusScrapingEndpoint(); 
-app.UseCors("AllowFrontend");
+//app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -154,7 +156,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
