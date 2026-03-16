@@ -2,6 +2,8 @@
 
 A RESTful backend for a support ticket management admin panel. Built with ASP.NET Core 8, it provides JWT-based authentication, ticket lifecycle management, user administration, and operational observability via Prometheus and OpenTelemetry.
 
+> **Frontend repository:** [Ticketing System UI](https://github.com/maksim-chmel/Ticketing-system-ui-main)
+
 ---
 
 ## Features
@@ -130,3 +132,9 @@ docker compose up --build
 - **Service layer** — business logic is separated from controllers; each domain area (auth, feedback, users, stats, broadcast) has its own service with a corresponding interface
 - **Global error handling** — `ErrorHandlingMiddleware` catches unhandled exceptions centrally, preventing implementation details from leaking into API responses
 - **Token rotation** — refresh tokens are stored in the database and rotated on each use; expired or reused tokens are rejected
+
+---
+
+## Frontend Repository
+
+[Ticketing System UI](https://github.com/maksim-chmel/Ticketing-system-ui-main) — React 19 + TypeScript admin interface with Recharts dashboards, served via Nginx.
