@@ -1,8 +1,34 @@
 # Ticketing System — Admin Panel Backend
 
-A RESTful backend for a support ticket management admin panel. Built with ASP.NET Core 8, it provides JWT-based authentication, ticket lifecycle management, user administration, and operational observability via Prometheus and OpenTelemetry.
+REST API backend for a support ticket management system. Part of a four-component platform — see [System Overview](#system-overview) below.
 
-> **Frontend repository:** [Ticketing System UI](https://github.com/maksim-chmel/Ticketing-system-ui-main)
+---
+
+## System Overview
+
+This project is one of four components that form a complete ticketing platform:
+
+| Repository | Technology | Role |
+|---|---|---|
+| **ticketing-system-server** ← you are here | ASP.NET Core 8 | REST API, business logic, database |
+| [ticketing-system-ui](https://github.com/maksim-chmel/Ticketing-system-ui) | React 19 + TypeScript | Admin panel for coordinators |
+| [feedback_bot](https://github.com/maksim-chmel/feedback_bot) | Node.js + TypeScript | Telegram bot for end users |
+| [alarm_bot](https://github.com/maksim-chmel/alarm_bot) | Node.js + TypeScript | Telegram bot that notifies operators of new tickets |
+
+```
+User (Telegram)
+     │ creates ticket via feedback_bot
+     ▼
+PostgreSQL ◄──────────────────────────────────────────────────
+     │                                                        │
+     ├── alarm_bot polls every 15s → notifies operator       │
+     │                                                        │
+     └── ticketing-system-server (this repo) ────────────────┘
+              │
+              ▼
+     ticketing-system-ui (admin panel)
+     Coordinators manage tickets, view stats, send broadcasts
+```
 
 ---
 
@@ -11,9 +37,9 @@ A RESTful backend for a support ticket management admin panel. Built with ASP.NE
 - **Authentication** — JWT access tokens + HttpOnly cookie refresh tokens with automatic rotation
 - **Ticket management** — view all feedback tickets, update status through a configurable lifecycle (`Open → InProgress → Waiting → Done / Rejected`)
 - **User management** — list users, add admin comments per user
-- **Broadcast messages** — create system-wide broadcast messages via a dedicated endpoint
+- **Broadcast messages** — queue system-wide messages delivered to all users via Telegram bot
 - **Statistics** — status distribution and requests-over-time aggregations for dashboard charts
-- **Observability** — structured logging with Serilog (console + Seq sink), Prometheus metrics endpoint, OpenTelemetry instrumentation for ASP.NET Core, HTTP client, and runtime
+- **Observability** — structured logging with Serilog (console + Seq sink), Prometheus metrics endpoint, OpenTelemetry instrumentation
 - **Auto-migration & seeding** — database migrates automatically on startup; default admin account is seeded if absent
 
 ---
@@ -43,7 +69,7 @@ AdminPanelBack/
 │                       # User, Statistics, Broadcast)
 ├── Repository/         # Data access layer with interface/implementation pairs
 ├── Models/             # Domain models (Feedback, User, Admin, BroadcastMessage, …)
-├── DTO/                # Response DTOs (UserDto, FeedbackDto, StatisticsDto)
+├── DTO/                # Response DTOs
 ├── Profiles/           # AutoMapper profiles
 ├── Middleware/         # Global error handling middleware
 ├── DB/                 # AppDbContext
@@ -81,7 +107,7 @@ AdminPanelBack/
 ### Broadcast
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| POST | `/api/broadcast/add-broadcastMessage` | Public | Queue a broadcast message |
+| POST | `/api/broadcast/add-broadcastMessage` | Bearer | Queue a broadcast message |
 
 ### Metrics
 | Route | Description |
@@ -95,18 +121,20 @@ AdminPanelBack/
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL (or Docker)
+- PostgreSQL
 
 ### Environment Variables
 
 Create a `.env` file in the project root:
 
 ```env
-DefaultConnection=Host=localhost;Port=5432;Database=ticketing;Username=postgres;Password=yourpassword
-JWT_SECRET_KEY=your-secret-key-min-32-chars
-JWT_ISSUER=your-issuer
-JWT_AUDIENCE=your-audience
+DefaultConnection=Host=localhost;Port=5432;Database=feedbackdb;Username=postgres;Password=yourpassword
+JWT_SECRET_KEY=your-secret-key-minimum-32-chars
+JWT_ISSUER=adminpanel
+JWT_AUDIENCE=frontadminpanel
 JWT_EXPIRES_IN_MINUTES=60
+CORS_ORIGIN=http://localhost:3000
+SEQ_URL=http://localhost:5341
 ```
 
 ### Run locally
@@ -116,7 +144,7 @@ cd AdminPanelBack
 dotnet run
 ```
 
-The API will be available at `http://localhost:5101`. Swagger UI is available at `/swagger` in Development mode.
+Swagger UI is available at `/swagger` in Development mode.
 
 ### Run with Docker Compose
 
@@ -128,13 +156,10 @@ docker compose up --build
 
 ## Architecture Notes
 
-- **Repository pattern** — all data access is abstracted behind interfaces, keeping services testable and independent of EF Core
-- **Service layer** — business logic is separated from controllers; each domain area (auth, feedback, users, stats, broadcast) has its own service with a corresponding interface
-- **Global error handling** — `ErrorHandlingMiddleware` catches unhandled exceptions centrally, preventing implementation details from leaking into API responses
-- **Token rotation** — refresh tokens are stored in the database and rotated on each use; expired or reused tokens are rejected
-
----
-
+- **Repository pattern** — all data access is abstracted behind interfaces
+- **Service layer** — business logic separated from controllers; each domain area has its own service with a corresponding interface
+- **Global error handling** — `ErrorHandlingMiddleware` catches unhandled exceptions centrally
+- **Token rotation** — refresh tokens stored in the database and rotated on each use
 ## Frontend Repository
 
 [Ticketing System UI](https://github.com/maksim-chmel/Ticketing-system-ui-main) — React 19 + TypeScript admin interface with Recharts dashboards, served via Nginx.
