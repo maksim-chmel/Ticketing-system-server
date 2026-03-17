@@ -13,34 +13,34 @@ public class StatisticsController(IStatisticsService service, ILogger<Statistics
     [HttpGet("status-distribution")]
     public async Task<IActionResult> GetStatusDistribution()
     {
-        logger.LogInformation("Запрос на получение распределения статусов");
+        logger.LogInformation("Fetching status distribution");
         try
         {
             var result = await service.GetStatusDistributionAsync();
-            logger.LogInformation("Распределение статусов получено успешно, элементов: {Count}", result?.Count() ?? 0);
+            logger.LogInformation("Status distribution retrieved successfully, count: {Count}", result?.Count() ?? 0);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при получении распределения статусов");
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error retrieving status distribution");
+            return StatusCode(500, "Internal server error");
         }
     }
-    
+
     [HttpGet("requests-over-time")]
     public async Task<IActionResult> GetRequestsOverTimeAsync()
     {
-        logger.LogInformation("Запрос на получение статистики заявок во времени");
+        logger.LogInformation("Fetching requests over time");
         try
         {
             var result = await service.GetRequestsOverTimeAsync();
-            logger.LogInformation("Статистика заявок получена успешно, элементов: {Count}", result?.Count() ?? 0);
+            logger.LogInformation("Requests over time retrieved successfully, count: {Count}", result?.Count() ?? 0);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при получении статистики заявок во времени");
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error retrieving requests over time");
+            return StatusCode(500, "Internal server error");
         }
     }
 }

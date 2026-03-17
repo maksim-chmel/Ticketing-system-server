@@ -10,7 +10,7 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка обработки запроса");
+            logger.LogError(ex, "Error in operation request");
 
             context.Response.ContentType = "application/json";
 

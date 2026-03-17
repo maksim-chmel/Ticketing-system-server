@@ -23,8 +23,7 @@ using Serilog;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
-Env.Load(); 
-Console.WriteLine("JWT_SECRET_KEY = " + Environment.GetEnvironmentVariable("JWT_SECRET_KEY"));
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +32,7 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = Environment.GetEnvironmentVariable("DefaultConnection") 
+var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
                        ?? throw new Exception("DefaultConnection not set");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -42,39 +41,38 @@ builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<ITokenService,TokenService>();
-builder.Services.AddScoped<IAuthService,AuthService>();
-builder.Services.AddScoped<ILoginService,LoginService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
-builder.Services.AddScoped<IRefreshTokenService,RefreshTokenService>();
-builder.Services.AddScoped<IFeedbackRepository,FeedbackRepository>();
-builder.Services.AddScoped<IStatisticsRepository,StatisticsRepository>();
-builder.Services.AddScoped<IUserRepository,UserRepository>();
-builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
 builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddControllers();
-/*builder.Services.AddCors(options =>
+
+builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:8080") 
+            .WithOrigins(Environment.GetEnvironmentVariable("CORS_ORIGIN") ?? "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
     });
 });
-*/
 
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenLocalhost(5101);
 });
-
 
 var jwtSettings = new JwtSettings
 {
@@ -91,16 +89,18 @@ builder.Services.Configure<JwtSettings>(options =>
     options.Audience = jwtSettings.Audience;
     options.ExpiresInMinutes = jwtSettings.ExpiresInMinutes;
 });
+
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
     {
         metrics
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MyAspNetApp"))
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("AdminPanelBack"))
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
             .AddPrometheusExporter();
     });
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -122,9 +122,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.Seq("http://100.70.1.24:5341") 
+    .WriteTo.Seq(Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341")
     .Enrich.FromLogContext()
     .CreateLogger();
 
@@ -139,24 +140,24 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<Admin>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    dbContext.Database.Migrate(); 
+    dbContext.Database.Migrate();
     await SeedAdmin.SeedAdminAsync(userManager, roleManager);
 }
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseOpenTelemetryPrometheusScrapingEndpoint(); 
-//app.UseCors("AllowFrontend");
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
-app.UseMetricServer();    
-app.UseHttpMetrics(); 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();

@@ -5,67 +5,66 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AdminPanelBack.Services.Login;
 
-public class LoginService(UserManager<Admin> userManager,ITokenService tokenService,
-    IRefreshTokenService refreshTokenService,ILogger<LoginService> logger,IAuthService authService) : ILoginService
+public class LoginService(UserManager<Admin> userManager, ITokenService tokenService,
+    IRefreshTokenService refreshTokenService, ILogger<LoginService> logger, IAuthService authService) : ILoginService
 {
     public async Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password)
     {
         try
         {
-            logger.LogInformation("Попытка аутентификации пользователя {Username}", username);
+            logger.LogInformation("Authentication attempt for user {Username}", username);
             var user = await authService.FindAdminByUsernameOrThrow(username);
             await authService.CheckPasswordOrThrow(user, password);
             await refreshTokenService.RevokeAllUserTokensAsync(user.Id);
             var (accessToken, refreshToken) = await GenerateTokensAsync(user);
-            logger.LogInformation("Пользователь {Username} успешно аутентифицирован", username);
+            logger.LogInformation("User {Username} authenticated successfully", username);
             return (accessToken, refreshToken);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Ошибка аутентификации пользователя {Username}", username);
+            logger.LogWarning(ex, "Authentication failed for user {Username}", username);
             throw;
         }
     }
-    
+
     public async Task<(string accessToken, string refreshToken, string userName)> RefreshTokensAsync(string currentRefreshToken)
     {
         try
         {
-            logger.LogInformation("Попытка обновления токенов");
+            logger.LogInformation("Attempting to refresh tokens");
 
             var token = await refreshTokenService.GetRefreshToken(currentRefreshToken);
             if (token == null)
             {
-                logger.LogWarning("Неверный refresh токен");
-                throw new UnauthorizedAccessException("Недействительный refresh токен");
+                logger.LogWarning("Invalid refresh token provided");
+                throw new UnauthorizedAccessException("Invalid refresh token");
             }
 
             var user = await userManager.FindByIdAsync(token.UserId);
             if (user == null)
             {
-                logger.LogWarning("Пользователь не найден при обновлении токена");
-                throw new UnauthorizedAccessException("Пользователь не найден");
+                logger.LogWarning("User not found during token refresh");
+                throw new UnauthorizedAccessException("User not found");
             }
+
             await refreshTokenService.RevokeRefreshTokenAsync(currentRefreshToken);
             var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user);
-            logger.LogInformation("Токены успешно обновлены для пользователя {Username}", user.UserName);
+            logger.LogInformation("Tokens successfully refreshed for user {Username}", user.UserName);
 
             return (newAccessToken, newRefreshToken, user.UserName);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Ошибка при обновлении токенов");
+            logger.LogWarning(ex, "Error refreshing tokens");
             throw;
         }
     }
+
     private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user)
-    
     {
         await refreshTokenService.RevokeRefreshTokenAsync(user.Id);
-        var accessToken = tokenService.GenerateToken(user.Id, user.UserName); 
+        var accessToken = tokenService.GenerateToken(user.Id, user.UserName);
         var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id);
         return (accessToken, refreshToken);
     }
-    
-
 }

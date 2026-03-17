@@ -15,34 +15,34 @@ public class FeedbackController(IFeedbackService feedbackService,
     [HttpGet]
     public async Task<ActionResult<List<Feedback>>> GetAll()
     {
-        logger.LogInformation("Запрос на получение всех отзывов");
+        logger.LogInformation("Fetching all feedbacks");
         try
         {
             var feedbacks = await feedbackService.GetAllFeedbacksAsync();
-            logger.LogInformation("Получено {Count} отзывов", feedbacks.Count);
+            logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
             return Ok(feedbacks);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при получении отзывов");
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error retrieving feedbacks");
+            return StatusCode(500, "Internal server error");
         }
     }
 
     [HttpPost("update-status/{id}")]
     public async Task<IActionResult> UpdateStatus(int id, [FromQuery] FeedbackStatus status)
     {
-        logger.LogInformation("Запрос на обновление статуса отзыва с Id={Id} на {Status}", id, status);
+        logger.LogInformation("Updating status of feedback Id={Id} to {Status}", id, status);
         try
         {
             await feedbackService.UpdateStatus(id, status);
-            logger.LogInformation("Статус отзыва с Id={Id} успешно обновлен на {Status}", id, status);
+            logger.LogInformation("Feedback Id={Id} status successfully updated to {Status}", id, status);
             return Ok();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при обновлении статуса отзыва с Id={Id}", id);
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error updating status of feedback Id={Id}", id);
+            return StatusCode(500, "Internal server error");
         }
     }
 }

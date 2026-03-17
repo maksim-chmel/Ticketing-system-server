@@ -1,8 +1,10 @@
 using AdminPanelBack.Models;
 using AdminPanelBack.Services.Broadcast;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class BroadcastController(IBroadcastMessageService service) : ControllerBase
@@ -12,10 +14,10 @@ public class BroadcastController(IBroadcastMessageService service) : ControllerB
     {
         if (string.IsNullOrWhiteSpace(request.Message))
         {
-            return BadRequest("Сообщение не может быть пустым.");
+            return BadRequest("Message cannot be empty");
         }
 
         await service.CreateBroadcastMessage(request.Message);
-        return Ok("Сообщение успешно добавлено в очередь.");
+        return Ok("Message has been created");
     }
 }

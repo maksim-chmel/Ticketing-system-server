@@ -15,34 +15,34 @@ public class UserController(IUserService service,
     [HttpGet("users-to-list")]
     public async Task<IActionResult> GetUsersToList()
     {
-        logger.LogInformation("Запрос на получение списка пользователей");
+        logger.LogInformation("Fetching user list");
         try
         {
             var result = await service.GetAllUsers();
-            logger.LogInformation("Получено {Count} пользователей", result?.Count() ?? 0);
+            logger.LogInformation("Retrieved {Count} users", result?.Count() ?? 0);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при получении списка пользователей");
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error retrieving user list");
+            return StatusCode(500, "Internal server error");
         }
     }
 
     [HttpPost("update-comment")]
     public async Task<IActionResult> UpdateUserComment([FromBody] UpdateCommentRequest request)
     {
-        logger.LogInformation("Запрос на обновление комментария пользователя с Id {UserId}", request.UserId);
+        logger.LogInformation("Updating comment for user Id={UserId}", request.UserId);
         try
         {
             var result = await service.ManageComment(request.UserId, request.Comment);
-            logger.LogInformation("Комментарий пользователя с Id {UserId} обновлен успешно", request.UserId);
+            logger.LogInformation("Comment for user Id={UserId} updated successfully", request.UserId);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при обновлении комментария пользователя с Id {UserId}", request.UserId);
-            return StatusCode(500, "Внутренняя ошибка сервера");
+            logger.LogError(ex, "Error updating comment for user Id={UserId}", request.UserId);
+            return StatusCode(500, "Internal server error");
         }
     }
 }

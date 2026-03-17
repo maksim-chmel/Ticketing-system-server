@@ -1,15 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AdminPanelBack.Services.Token
-{
-    using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+namespace AdminPanelBack.Services.Token;
 
 public class TokenService : ITokenService
 {
@@ -32,12 +27,12 @@ public class TokenService : ITokenService
         _expiresInMinutes = int.Parse(expiresStr);
 
         _logger = logger;
-        _logger.LogInformation("TokenService инициализирован с истечением токена {ExpiresIn} минут", _expiresInMinutes);
+        _logger.LogInformation("TokenService initialized with token expiry of {ExpiresIn} minutes", _expiresInMinutes);
     }
 
     public string GenerateToken(string userId, string username)
     {
-        _logger.LogInformation("Генерация токена для пользователя {UserId} ({Username})", userId, username);
+        _logger.LogInformation("Generating token for user {UserId} ({Username})", userId, username);
 
         var claims = new List<Claim>
         {
@@ -58,9 +53,8 @@ public class TokenService : ITokenService
 
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        _logger.LogInformation("Токен успешно сгенерирован для пользователя {UserId}", userId);
+        _logger.LogInformation("Token successfully generated for user {UserId}", userId);
 
         return jwt;
     }
-}
 }

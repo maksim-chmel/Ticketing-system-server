@@ -31,7 +31,7 @@ public class AuthController(ILogger<AuthController> logger,ILoginService loginSe
     {
         var refreshToken = Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
-            return Unauthorized("Refresh token не найден");
+            return Unauthorized("Refresh token not found");
         var (accessToken, newRefreshToken, userName) = 
                 await loginService.RefreshTokensAsync(refreshToken);
             Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
