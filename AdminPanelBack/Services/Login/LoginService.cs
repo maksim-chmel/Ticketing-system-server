@@ -62,7 +62,7 @@ public class LoginService(UserManager<Admin> userManager, ITokenService tokenSer
 
     private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user)
     {
-        await refreshTokenService.RevokeRefreshTokenAsync(user.Id);
+       
         var accessToken = tokenService.GenerateToken(user.Id, user.UserName);
         var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id);
         return (accessToken, refreshToken);

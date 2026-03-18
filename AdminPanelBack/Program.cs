@@ -5,7 +5,6 @@ using AdminPanelBack.Middleware;
 using AdminPanelBack.Models;
 using AdminPanelBack.Profiles;
 using AdminPanelBack.Repository;
-using AdminPanelBack.Services;
 using AdminPanelBack.Services.Auth;
 using AdminPanelBack.Services.Broadcast;
 using AdminPanelBack.Services.Feedback;
@@ -139,9 +138,17 @@ using (var scope = app.Services.CreateScope())
     var dbContext = services.GetRequiredService<AppDbContext>();
     var userManager = services.GetRequiredService<UserManager<Admin>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
-    dbContext.Database.Migrate();
-    await SeedAdmin.SeedAdminAsync(userManager, roleManager);
+    try
+    {
+        dbContext.Database.Migrate();
+        await SeedAdmin.SeedAdminAsync(userManager, roleManager);
+        Log.Information("Database connected and migrations applied");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning("Database is not available: {Message}", ex.Message);
+    }
+    
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
