@@ -33,7 +33,7 @@ public class FeedbackServiceTests
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenFeedbacksExist_ReturnsMappedDtos()
     {
-        // Arrange
+        
         var feedbacks = new List<Feedback>
         {
             new() { Id = 1, UserId = 100, Comment = "Great service", Status = FeedbackStatus.Open },
@@ -41,10 +41,10 @@ public class FeedbackServiceTests
         };
         _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(feedbacks);
 
-        // Act
+       
         var result = await _service.GetAllFeedbacksAsync();
 
-        // Assert
+        
         result.Should().HaveCount(2);
         result[0].Id.Should().Be(1);
         result[1].Comment.Should().Be("Issue with login");
@@ -53,27 +53,27 @@ public class FeedbackServiceTests
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenNoFeedbacks_ReturnsEmptyList()
     {
-        // Arrange
+        
         _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(new List<Feedback>());
 
-        // Act
+        
         var result = await _service.GetAllFeedbacksAsync();
 
-        // Assert
+       
         result.Should().BeEmpty();
     }
 
     [Fact]
     public async Task UpdateStatus_WhenFeedbackExists_UpdatesStatusAndSaves()
     {
-        // Arrange
+        
         var feedback = new Feedback { Id = 1, Status = FeedbackStatus.Open };
         _mockRepo.Setup(r => r.FindAsyncById(1)).ReturnsAsync(feedback);
 
-        // Act
+       
         await _service.UpdateStatus(1, FeedbackStatus.Done);
 
-        // Assert
+        
         feedback.Status.Should().Be(FeedbackStatus.Done);
         _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Once);
     }
@@ -81,13 +81,13 @@ public class FeedbackServiceTests
     [Fact]
     public async Task UpdateStatus_WhenFeedbackNotFound_DoesNotSave()
     {
-        // Arrange
+        
         _mockRepo.Setup(r => r.FindAsyncById(99)).ReturnsAsync((Feedback?)null);
 
-        // Act
+        
         await _service.UpdateStatus(99, FeedbackStatus.Done);
 
-        // Assert
+        
         _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Never);
     }
 
@@ -117,14 +117,14 @@ public class FeedbackServiceTests
     [InlineData(FeedbackStatus.Rejected)]
     public async Task UpdateStatus_ToAnyStatus_SavesCorrectly(FeedbackStatus newStatus)
     {
-        // Arrange
+        
         var feedback = new Feedback { Id = 1, Status = FeedbackStatus.Open };
         _mockRepo.Setup(r => r.FindAsyncById(1)).ReturnsAsync(feedback);
 
-        // Act
+        
         await _service.UpdateStatus(1, newStatus);
 
-        // Assert
+       
         feedback.Status.Should().Be(newStatus);
         _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Once);
     }

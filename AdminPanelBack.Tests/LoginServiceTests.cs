@@ -3,9 +3,7 @@ using AdminPanelBack.Services.Auth;
 using AdminPanelBack.Services.Login;
 using AdminPanelBack.Services.Token;
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace AdminPanelBack.Tests;
@@ -47,15 +45,15 @@ public class LoginServiceTests
     [Fact]
     public async Task RefreshTokensAsync_WhenEverythingIsOk_ReturnsTokens()
     {
-        // Arrange
+       
         _fakeUserManager.UserToReturn = new Admin { Id = "123", UserName = "admin" };
         _mockRefreshTokenService.Setup(r => r.GetRefreshToken("valid_token"))
             .ReturnsAsync(new RefreshToken { UserId = "123" });
 
-        // Act
+       
         var result = await _service.RefreshTokensAsync("valid_token");
 
-        // Assert
+        
         result.userName.Should().Be("admin");
     }
     [Fact]
@@ -68,23 +66,5 @@ public class LoginServiceTests
     }
     
     
-    public class FakeUserManager : UserManager<Admin>
-    {
-        public Admin? UserToReturn { get; set; }  
-
-        public FakeUserManager() : base(
-            new Mock<IUserStore<Admin>>().Object,
-            new Mock<IOptions<IdentityOptions>>().Object,
-            new Mock<IPasswordHasher<Admin>>().Object,
-            new IUserValidator<Admin>[0],
-            new IPasswordValidator<Admin>[0],
-            new Mock<ILookupNormalizer>().Object,
-            new IdentityErrorDescriber(),
-            new Mock<IServiceProvider>().Object,
-            new Mock<ILogger<UserManager<Admin>>>().Object)
-        { }
-
-        public override Task<Admin?> FindByIdAsync(string userId)
-            => Task.FromResult(UserToReturn); 
-    }
+   
 }
