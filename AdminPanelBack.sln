@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 		Dockerfile = Dockerfile
 		.dockerignore = .dockerignore
+		.env = .env
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdminPanelBack.Tests", "AdminPanelBack.Tests\AdminPanelBack.Tests.csproj", "{083F9D94-3897-4922-A931-BB09D38E85EE}"

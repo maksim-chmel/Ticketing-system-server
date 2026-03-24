@@ -31,11 +31,13 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                       ?? builder.Configuration["DefaultConnection"] 
                        ?? throw new Exception("DefaultConnection not set");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
+
 builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -61,7 +63,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins(Environment.GetEnvironmentVariable("CORS_ORIGIN") ?? "http://localhost:3000")
+            .WithOrigins(builder.Configuration["CORS_ORIGIN"] ?? "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -70,15 +72,15 @@ builder.Services.AddCors(options =>
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(5101);
+    options.ListenAnyIP(8080); 
 });
 
 var jwtSettings = new JwtSettings
 {
-    SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? throw new Exception("JWT_SECRET_KEY not set"),
-    Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? throw new Exception("JWT_ISSUER not set"),
-    Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? throw new Exception("JWT_AUDIENCE not set"),
-    ExpiresInMinutes = int.TryParse(Environment.GetEnvironmentVariable("JWT_EXPIRES_IN_MINUTES"), out var exp) ? exp : 60
+    SecretKey = builder.Configuration["JWT_SECRET_KEY"] ?? throw new Exception("JWT_SECRET_KEY not set"),
+    Issuer = builder.Configuration["JWT_ISSUER"] ?? throw new Exception("JWT_ISSUER not set"),
+    Audience = builder.Configuration["JWT_AUDIENCE"] ?? throw new Exception("JWT_AUDIENCE not set"),
+    ExpiresInMinutes = int.TryParse(builder.Configuration["JWT_EXPIRES_IN_MINUTES"], out var exp) ? exp : 60
 };
 
 builder.Services.Configure<JwtSettings>(options =>
@@ -124,7 +126,7 @@ builder.Services.AddAuthorization();
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.Seq(Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341")
+    .WriteTo.Seq(builder.Configuration["SEQ_URL"] ?? "http://localhost:5341")
     .Enrich.FromLogContext()
     .CreateLogger();
 
@@ -146,9 +148,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Log.Warning("Database is not available: {Message}", ex.Message);
+        Log.Error(ex, "An error occurred while migrating or seeding the database");
     }
-    
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -159,7 +160,7 @@ app.UseAuthorization();
 app.UseMetricServer();
 app.UseHttpMetrics();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction()) 
 {
     app.UseSwagger();
     app.UseSwaggerUI();

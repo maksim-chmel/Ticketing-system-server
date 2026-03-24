@@ -1,4 +1,5 @@
 ﻿services:
+  # Бэкенд приложение
   adminpanel-back:
     build:
       context: .
@@ -7,10 +8,36 @@
     ports:
       - "5101:8080"
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy # Ждем полной готовности базы
     environment:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
-      - DefaultConnection=${DefaultConnection}
+      # Передаем строку подключения, используя имя сервиса 'db'
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD}
     env_file:
-      - .env 
+      - .env
+
+  # База данных PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: adminpanel-db
+    restart: always
+    environment:
+      - POSTGRES_DB=feedbackdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5433:5432" # 5433 для подключения с твоего Mac (через Rider/DBeaver)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
