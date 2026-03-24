@@ -1,27 +1,22 @@
-name: Self-hosted Deploy Backend
+name: Self-hosted Deploy (Example)
+
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
+   
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Pull latest backend code
+      - name: Create .env file from secrets
+       
         run: |
-          cd ~/AdminPanelBack
-          git pull origin main
-
-      - name: Inject secrets into .env file
-        run: |
-          cd ~/AdminPanelBack
-          cat <<EOF > .env
+          cat <<'EOF' > .env
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
           JWT_ISSUER=${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
@@ -29,9 +24,11 @@ jobs:
           DefaultConnection=${{ secrets.DefaultConnection }}
           EOF
 
-      - name: Restart Docker containers
+      - name: Deploy with Docker Compose
+        
         run: |
-          cd ~/AdminPanelBack
-          docker rm -f adminpanel-back || true
-          docker compose down
-          docker compose up -d --build
+          docker compose up -d --build --remove-orphans
+
+      - name: Clean up old Docker images
+       
+        run: docker image prune -f
