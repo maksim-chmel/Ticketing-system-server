@@ -21,6 +21,10 @@ public class FakeUserManager : UserManager<Admin>
         new Mock<ILogger<UserManager<Admin>>>().Object)
     { }
 
+    public override Task<bool> CheckPasswordAsync(Admin user, string password)
+        => Task.FromResult(PasswordResult);
+
+    public bool PasswordResult { get; set; } = true;
     public override Task<Admin?> FindByIdAsync(string userId)
         => Task.FromResult(UserToReturn);
 

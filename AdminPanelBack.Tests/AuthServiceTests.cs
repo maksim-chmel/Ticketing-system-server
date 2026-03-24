@@ -39,5 +39,33 @@ public class AuthServiceTests
         result.Should().NotBeNull();
         result.UserName.Should().Be("admin");
     }
+
+    [Fact]
+    public async Task CheckPasswordOrThrow_WhenAdminIsNull_ThrowsArgumentNullException()
+    {
+       
+        await _service.Invoking(s =>s.CheckPasswordOrThrow(null,"password")).Should().ThrowAsync<ArgumentNullException>();
+      
+    }
+
+    [Fact]
+    public async Task CheckPasswordOrThrow_WhenPasswordIsEmpty_ThrowsArgumentException()
+    {
+        await _service.Invoking(s=>s.CheckPasswordOrThrow(new Admin(),null)).Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task CheckPasswordOrThrow_WhenPasswordIsInvalid_ThrowsUnauthorizedException()
+    {
+        mockerUserManager.PasswordResult = false;
+        await _service.Invoking(s =>s.CheckPasswordOrThrow(new Admin(),"password")).Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task CheckPasswordOrThrow_WhenEverythingIsOk_CompletesSuccessfully()
+    {
+        mockerUserManager.PasswordResult = true;
+        await _service.Invoking(s => s.CheckPasswordOrThrow(new Admin(), "pass")).Should().NotThrowAsync();
+    }
     
 }
