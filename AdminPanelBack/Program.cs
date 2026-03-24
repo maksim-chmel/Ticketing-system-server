@@ -22,14 +22,16 @@ using Serilog;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
+
 Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Configuration.AddEnvironmentVariables();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                        ?? builder.Configuration["DefaultConnection"] 
@@ -41,6 +43,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -56,7 +59,7 @@ builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
 builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
-builder.Services.AddControllers();
+
 
 builder.Services.AddCors(options =>
 {
@@ -70,17 +73,24 @@ builder.Services.AddCors(options =>
     });
 });
 
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(8080); 
 });
 
+
+var secretKey = builder.Configuration["JWT_SECRET_KEY"] ?? throw new Exception("JWT_SECRET_KEY not set");
+var issuer = builder.Configuration["JWT_ISSUER"] ?? throw new Exception("JWT_ISSUER not set");
+var audience = builder.Configuration["JWT_AUDIENCE"] ?? throw new Exception("JWT_AUDIENCE not set");
+int.TryParse(builder.Configuration["JWT_EXPIRES_IN_MINUTES"], out var expiration);
+
 var jwtSettings = new JwtSettings
 {
-    SecretKey = builder.Configuration["JWT_SECRET_KEY"] ?? throw new Exception("JWT_SECRET_KEY not set"),
-    Issuer = builder.Configuration["JWT_ISSUER"] ?? throw new Exception("JWT_ISSUER not set"),
-    Audience = builder.Configuration["JWT_AUDIENCE"] ?? throw new Exception("JWT_AUDIENCE not set"),
-    ExpiresInMinutes = int.TryParse(builder.Configuration["JWT_EXPIRES_IN_MINUTES"], out var exp) ? exp : 60
+    SecretKey = secretKey,
+    Issuer = issuer,
+    Audience = audience,
+    ExpiresInMinutes = expiration > 0 ? expiration : 60
 };
 
 builder.Services.Configure<JwtSettings>(options =>
@@ -90,6 +100,7 @@ builder.Services.Configure<JwtSettings>(options =>
     options.Audience = jwtSettings.Audience;
     options.ExpiresInMinutes = jwtSettings.ExpiresInMinutes;
 });
+
 
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
@@ -109,7 +120,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -118,11 +128,12 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
     };
 });
 
 builder.Services.AddAuthorization();
+
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -132,39 +143,43 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+
 var app = builder.Build();
+
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var dbContext = services.GetRequiredService<AppDbContext>();
-    var userManager = services.GetRequiredService<UserManager<Admin>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     try
     {
+        var dbContext = services.GetRequiredService<AppDbContext>();
+        var userManager = services.GetRequiredService<UserManager<Admin>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        
         dbContext.Database.Migrate();
         await SeedAdmin.SeedAdminAsync(userManager, roleManager);
         Log.Information("Database connected and migrations applied");
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "An error occurred while migrating or seeding the database");
+        Log.Error(ex, "Migration error");
     }
 }
 
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseOpenTelemetryPrometheusScrapingEndpoint();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseRouting();
 app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 app.UseMetricServer();
 app.UseHttpMetrics();
-
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction()) 
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.MapControllers();
 

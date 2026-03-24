@@ -1,5 +1,5 @@
 ﻿services:
-  # Бэкенд приложение
+ 
   adminpanel-back:
     build:
       context: .
@@ -10,17 +10,18 @@
     restart: unless-stopped
     depends_on:
       db:
-        condition: service_healthy # Ждем полной готовности базы
+        condition: service_healthy
     environment:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
-      # Передаем строку подключения, используя имя сервиса 'db'
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD}
     env_file:
       - .env
+    networks:
+      - feedback_net 
 
-  # База данных PostgreSQL
+ 
   db:
     image: postgres:16-alpine
     container_name: adminpanel-db
@@ -30,7 +31,7 @@
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "5433:5432" # 5433 для подключения с твоего Mac (через Rider/DBeaver)
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -38,6 +39,13 @@
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - feedback_net 
 
 volumes:
   postgres_data:
+
+
+networks:
+  feedback_net:
+    name: feedback_shared_network 
