@@ -5,4 +5,5 @@ namespace AdminPanelBack.Repository;
 public interface IFeedbackRepository: IRepository<Feedback>
 {
     Task<List<Feedback>> GetAllFeedbacksAsync();
+    Task AddFeedbackAsync(Feedback feedback);
 }

@@ -13,4 +13,10 @@ public class FeedbackRepository(AppDbContext dbContext)
     {
         return await _dbContext.Feedbacks.Include(f => f.User).ToListAsync();
     }
+
+    public async Task AddFeedbackAsync(Feedback feedback)
+    {
+        await _dbContext.Feedbacks.AddAsync(feedback);
+        await  _dbContext.SaveChangesAsync();
+    }
 }

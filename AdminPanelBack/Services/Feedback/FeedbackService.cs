@@ -1,3 +1,4 @@
+using AdminPanelBack.Controllers;
 using AdminPanelBack.DTO;
 using AdminPanelBack.Repository;
 using AutoMapper;
@@ -21,5 +22,11 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFe
             await repository.SaveChangesAsync();
         }
     }
-   
+
+    public async Task CreateFeedbackAsync(UsersMessageDto dto)
+    { 
+        var feedback = mapper.Map<Models.Feedback>(dto);
+        await repository.AddFeedbackAsync(feedback);
+        
+    }
 }
