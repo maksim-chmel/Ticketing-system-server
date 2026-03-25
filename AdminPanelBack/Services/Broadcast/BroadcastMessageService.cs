@@ -16,4 +16,16 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository) : I
         };
        await repository.CreateBroadcastMessage(newBroadcastMessage);
     }
+
+    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive()
+    {
+        var list = await repository.GetActiveBroadcastMessagesToList();
+        foreach (var msg  in list)
+        {
+            msg.IsActive = false;
+        }
+        await repository.UpdateBroadcastMessages(list);
+        return list;
+    }
+    
 }

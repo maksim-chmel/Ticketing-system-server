@@ -1,4 +1,3 @@
-using AdminPanelBack.Controllers;
 using AdminPanelBack.DTO;
 using AdminPanelBack.Repository;
 using AutoMapper;
@@ -10,6 +9,12 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFe
     public async Task<List<FeedbackDto>> GetAllFeedbacksAsync()
     {
         var feedbacks =await repository.GetAllFeedbacksAsync();
+
+        return mapper.Map<List<FeedbackDto>>(feedbacks);
+    }
+    public async Task<List<FeedbackDto>> GetAllUsersFeedbacksAsync(long userId)
+    {
+        var feedbacks = await repository.GetUserFeedbacksAsync(userId);
 
         return mapper.Map<List<FeedbackDto>>(feedbacks);
     }

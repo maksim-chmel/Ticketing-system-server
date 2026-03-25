@@ -11,6 +11,11 @@ public class UserService(IUserRepository repository,IMapper mapper) : IUserServi
         var users =  await repository.GetAllAsync();
         return mapper.Map<List<UserDto>>(users);
     }
+    public async Task<List<long>> GetAllUsersIds()
+    {
+        var users = await repository.GetAllAsync();
+        return users.Select(user => user.UserId).ToList();
+    }
     
     public async Task<Models.User?> ManageComment(long userId, string comment)
     {
@@ -20,4 +25,29 @@ public class UserService(IUserRepository repository,IMapper mapper) : IUserServi
         await repository.SaveChangesAsync();
         return user;
     }
+
+    public async Task<bool> RegistrationNewUser(UserDto userDto)
+    {
+        var user = await repository.FindAsyncById(userDto.UserId);
+        if (user != null) 
+        {
+            mapper.Map(userDto, user);
+            await repository.SaveChangesAsync();
+            return true; 
+        }
+        
+        var newUser = mapper.Map<Models.User>(userDto);
+        await repository.AddAsync(newUser);
+        await repository.SaveChangesAsync();
+    
+        return true;
+    }
+
+    public async Task<bool> IsUserExists(long userId)
+    {
+        var user = await repository.FindAsyncById(userId);
+        return user != null;
+    }
+    
+   
 }

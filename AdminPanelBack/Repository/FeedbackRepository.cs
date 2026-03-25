@@ -13,6 +13,13 @@ public class FeedbackRepository(AppDbContext dbContext)
     {
         return await _dbContext.Feedbacks.Include(f => f.User).ToListAsync();
     }
+    public async Task<List<Feedback>> GetUserFeedbacksAsync(long userId)
+    {
+        return await _dbContext.Feedbacks
+            .Where(f => f.UserId == userId) 
+            .OrderByDescending(f => f.CreatedDate) 
+            .ToListAsync();
+    }
 
     public async Task AddFeedbackAsync(Feedback feedback)
     {
