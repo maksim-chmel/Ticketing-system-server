@@ -59,4 +59,10 @@ public class BotFeedbackController(
         var messages = await broadcastMessageService.GetActiveBroadcastMessagesAndMakeInactive();
         return Ok(messages);
     }
+    [HttpGet("unnotified-feedbacks")]
+    public async Task<IActionResult> GetUnnotified()
+    {
+        var list = await feedbackService.GetNewFeedbacksForOperatorAsync();
+        return Ok(list);
+    }
 }

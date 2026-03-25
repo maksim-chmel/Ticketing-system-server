@@ -8,5 +8,6 @@ public interface IFeedbackService
    public Task UpdateStatus(int feedbackId , FeedbackStatus status);
    public Task CreateFeedbackAsync(UsersMessageDto dto);
    Task<List<FeedbackDto>> GetAllUsersFeedbacksAsync(long userId);
+   Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync();
 
 }

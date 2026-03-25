@@ -34,4 +34,23 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFe
         await repository.AddFeedbackAsync(feedback);
         
     }
+
+    public async Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync()
+    {
+        var allFeedbacks = await repository.GetAllFeedbacksAsync();
+        
+        var newFeedbacks = allFeedbacks.Where(f => !f.IsSentToOperator).ToList();
+        
+        if (newFeedbacks.Count == 0) 
+            return new List<FeedbackDto>();
+        
+        foreach (var feedback in newFeedbacks)
+        {
+            feedback.IsSentToOperator = true;
+        }
+        
+        await repository.UpdateFeedbackAsync(newFeedbacks);
+        
+        return mapper.Map<List<FeedbackDto>>(newFeedbacks);
+    }
 }

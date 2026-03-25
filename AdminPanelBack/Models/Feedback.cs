@@ -10,5 +10,6 @@ public class Feedback
     public string Comment { get; set; }
     public DateTime CreatedDate { get; set; } =DateTime.Now;
     public FeedbackStatus Status { get; set; }
+    public bool IsSentToOperator { get; set; } = false;
    
 }

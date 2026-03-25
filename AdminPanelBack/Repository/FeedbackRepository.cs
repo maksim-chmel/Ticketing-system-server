@@ -26,4 +26,10 @@ public class FeedbackRepository(AppDbContext dbContext)
         await _dbContext.Feedbacks.AddAsync(feedback);
         await  _dbContext.SaveChangesAsync();
     }
+
+    public async Task UpdateFeedbackAsync(List<Feedback> feedback)
+    {
+        _dbContext.Feedbacks.UpdateRange(feedback);
+        await _dbContext.SaveChangesAsync();
+    }
 }
