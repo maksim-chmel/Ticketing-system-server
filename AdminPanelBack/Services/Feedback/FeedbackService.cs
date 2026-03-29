@@ -18,14 +18,14 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFe
 
         return mapper.Map<List<FeedbackDto>>(feedbacks);
     }
-    public async Task UpdateStatus(int feedbackId , FeedbackStatus status)
+    public async Task<bool> UpdateStatus(int feedbackId , FeedbackStatus status)
     {
         var feedback = await repository.FindAsyncById(feedbackId);
-        if (feedback != null)
-        {
-            feedback.Status = status;
-            await repository.SaveChangesAsync();
-        }
+        if (feedback == null) return false;
+        feedback.Status = status;
+        await repository.SaveChangesAsync();
+        return true;
+
     }
 
     public async Task CreateFeedbackAsync(UsersMessageDto dto)
@@ -53,4 +53,6 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper): IFe
         
         return mapper.Map<List<FeedbackDto>>(newFeedbacks);
     }
+
+   
 }

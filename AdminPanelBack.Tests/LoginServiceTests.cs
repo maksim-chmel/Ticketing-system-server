@@ -64,7 +64,24 @@ public class LoginServiceTests
         await _service.Invoking(s => s.RefreshTokensAsync("valid_token")).Should().ThrowAsync<UnauthorizedAccessException>();
 
     }
-    
+    [Fact]
+    public async Task AuthenticateAsync_WhenCredentialsAreValid_ReturnsTokens()
+    {
+        var user = new Admin { Id = "123", UserName = "admin" };
+        _mockAuthService.Setup(a => a.FindAdminByUsernameOrThrow("admin"))
+            .ReturnsAsync(user);
+        _mockAuthService.Setup(a => a.CheckPasswordOrThrow(user, "password"))
+            .Returns(Task.CompletedTask);
+        _mockTokenService.Setup(t => t.GenerateToken(user.Id, user.UserName))
+            .Returns("access_token");
+        _mockRefreshTokenService.Setup(r => r.CreateRefreshTokenAsync(user.Id))
+            .ReturnsAsync("refresh_token");
+
+        var result = await _service.AuthenticateAsync("admin", "password");
+
+        result.accessToken.Should().Be("access_token");
+        result.refreshToken.Should().Be("refresh_token");
+    }
     
    
 }

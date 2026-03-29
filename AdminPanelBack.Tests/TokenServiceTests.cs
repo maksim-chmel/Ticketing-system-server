@@ -1,6 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using AdminPanelBack.Models;
 using AdminPanelBack.Services.Token;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace AdminPanelBack.Tests;
@@ -10,13 +13,16 @@ public class TokenServiceTests
     private readonly TokenService _service;
     public TokenServiceTests()
     {
-        Environment.SetEnvironmentVariable("JWT_SECRET_KEY", "super-secret-key-for-testing-32-chars!!");
-        Environment.SetEnvironmentVariable("JWT_ISSUER", "test-issuer");
-        Environment.SetEnvironmentVariable("JWT_AUDIENCE", "test-audience");
-        Environment.SetEnvironmentVariable("JWT_EXPIRES_IN_MINUTES", "60");
+        var jwtSettings = Options.Create(new JwtSettings
+        {
+            SecretKey = "super-secret-key-for-testing-32-chars!!",
+            Issuer = "test-issuer",
+            Audience = "test-audience",
+            ExpiresInMinutes = 60
+        });
 
         var mockLogger = new Mock<ILogger<TokenService>>();
-        _service = new TokenService(mockLogger.Object);
+        _service = new TokenService(mockLogger.Object, jwtSettings);
     }
     
     [Fact]
@@ -42,5 +48,15 @@ public class TokenServiceTests
         result.Length.Should().BeGreaterThan(10);
     }
 
+    [Fact]
+    public void GenerateToken_ReturnsValidJwtToken()
+    {
+        var result = _service.GenerateToken("123", "admin");
     
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+    
+        token.Subject.Should().Be("123");
+        token.Claims.First(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value.Should().Be("admin");
+    }
 }

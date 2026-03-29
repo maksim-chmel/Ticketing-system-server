@@ -1,38 +1,24 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AdminPanelBack.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AdminPanelBack.Services.Token;
 
-public class TokenService : ITokenService
+public class TokenService(ILogger<TokenService> logger, IOptions<JwtSettings> jwtSettings)
+    : ITokenService
 {
-    private readonly string _secretKey;
-    private readonly string _issuer;
-    private readonly string _audience;
-    private readonly int _expiresInMinutes;
-    private readonly ILogger<TokenService> _logger;
-
-    public TokenService(ILogger<TokenService> logger)
-    {
-        _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
-                     ?? throw new Exception("JWT_SECRET_KEY not set");
-        _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
-                  ?? throw new Exception("JWT_ISSUER not set");
-        _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
-                    ?? throw new Exception("JWT_AUDIENCE not set");
-        var expiresStr = Environment.GetEnvironmentVariable("JWT_EXPIRES_IN_MINUTES")
-                         ?? throw new Exception("JWT_EXPIRES_IN_MINUTES not set");
-        _expiresInMinutes = int.Parse(expiresStr);
-
-        _logger = logger;
-        _logger.LogInformation("TokenService initialized with token expiry of {ExpiresIn} minutes", _expiresInMinutes);
-    }
+    private readonly string _secretKey = jwtSettings.Value.SecretKey;
+    private readonly string _issuer = jwtSettings.Value.Issuer;
+    private readonly string _audience = jwtSettings.Value.Audience;
+    private readonly int _expiresInMinutes = jwtSettings.Value.ExpiresInMinutes;
 
     public string GenerateToken(string userId, string username)
     {
-        _logger.LogInformation("Generating token for user {UserId} ({Username})", userId, username);
+        logger.LogInformation("Generating token for user {UserId} ({Username})", userId, username);
 
         var claims = new List<Claim>
         {
@@ -53,7 +39,7 @@ public class TokenService : ITokenService
 
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        _logger.LogInformation("Token successfully generated for user {UserId}", userId);
+        logger.LogInformation("Token successfully generated for user {UserId}", userId);
 
         return jwt;
     }

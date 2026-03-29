@@ -32,11 +32,13 @@ public class FeedbackController(IFeedbackService feedbackService,
     [HttpPost("update-status/{id}")]
     public async Task<IActionResult> UpdateStatus(int id, [FromQuery] FeedbackStatus status)
     {
-        logger.LogInformation("Updating status of feedback Id={Id} to {Status}", id, status);
         try
         {
-            await feedbackService.UpdateStatus(id, status);
-            logger.LogInformation("Feedback Id={Id} status successfully updated to {Status}", id, status);
+            var feedback = await feedbackService.UpdateStatus(id,status);
+            if (!feedback)
+            {
+                return NotFound($"Feedback with id {id} not found");
+            }
             return Ok();
         }
         catch (Exception ex)
