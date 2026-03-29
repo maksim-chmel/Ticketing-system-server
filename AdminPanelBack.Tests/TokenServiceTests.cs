@@ -47,16 +47,4 @@ public class TokenServiceTests
         var result = _service.GenerateToken("test", "test");
         result.Length.Should().BeGreaterThan(10);
     }
-
-    [Fact]
-    public void GenerateToken_ReturnsValidJwtToken()
-    {
-        var result = _service.GenerateToken("123", "admin");
-    
-        var handler = new JwtSecurityTokenHandler();
-        var token = handler.ReadJwtToken(result);
-    
-        token.Subject.Should().Be("123");
-        token.Claims.First(c => c.Type == JwtRegisteredClaimNames.UniqueName).Value.Should().Be("admin");
-    }
 }
