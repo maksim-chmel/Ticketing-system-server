@@ -3,7 +3,7 @@ using AdminPanelBack.Repository;
 
 namespace AdminPanelBack.Services.Broadcast;
 
-public class BroadcastMessageService(IBroadcastMessageRepository repository) : IBroadcastMessageService
+public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger) : IBroadcastMessageService
 {
     public async Task CreateBroadcastMessage(string message)
     {
@@ -15,6 +15,8 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository) : I
 
         };
        await repository.CreateBroadcastMessage(newBroadcastMessage);
+       logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
+       
     }
 
     public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive()
@@ -25,7 +27,9 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository) : I
             msg.IsActive = false;
         }
         await repository.UpdateBroadcastMessages(list);
+        logger.LogInformation("Deactivated {Count} broadcast messages", list.Count);
         return list;
+       
     }
     
 }

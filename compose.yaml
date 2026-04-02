@@ -1,5 +1,4 @@
 ﻿services:
- 
   adminpanel-back:
     build:
       context: .
@@ -11,17 +10,20 @@
     depends_on:
       db:
         condition: service_healthy
+      seq:
+        condition: service_started
     environment:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD}
+      - SEQ_URL=http://seq:5341
     env_file:
       - .env
     networks:
-      - feedback_net 
-
- 
+      - feedback_net
+  
   db:
     image: postgres:16-alpine
     container_name: adminpanel-db
@@ -40,12 +42,27 @@
       timeout: 5s
       retries: 5
     networks:
-      - feedback_net 
+      - feedback_net
+  
+  seq:
+    image: datalust/seq:latest
+    container_name: adminpanel-seq
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-YourStrongPassword123!}
+    ports:
+      - "5341:5341"
+      - "8081:80"
+    networks:
+      - feedback_net
+    volumes:
+      - seq_data:/data
 
 volumes:
   postgres_data:
-
+  seq_data:
 
 networks:
   feedback_net:
-    name: feedback_shared_network 
+    name: feedback_shared_network

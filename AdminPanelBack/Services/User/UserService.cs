@@ -4,7 +4,7 @@ using AutoMapper;
 
 namespace AdminPanelBack.Services.User;
 
-public class UserService(IUserRepository repository,IMapper mapper) : IUserService
+public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserService> logger) : IUserService
 {
     public async Task<List<UserDto>> GetAllUsers()
     {
@@ -14,6 +14,7 @@ public class UserService(IUserRepository repository,IMapper mapper) : IUserServi
     public async Task<List<long>> GetAllUsersIds()
     {
         var users = await repository.GetAllAsync();
+        
         return users.Select(user => user.UserId).ToList();
     }
     
@@ -28,19 +29,38 @@ public class UserService(IUserRepository repository,IMapper mapper) : IUserServi
 
     public async Task<bool> RegistrationNewUser(UserDto userDto)
     {
+       
+        logger.LogDebug("Starting registration/update for UserID: {UserId}", userDto.UserId);
+
         var user = await repository.FindAsyncById(userDto.UserId);
+    
         if (user != null) 
         {
+            
             mapper.Map(userDto, user);
             await repository.SaveChangesAsync();
+        
+            logger.LogInformation("Existing user {UserId} successfully updated", userDto.UserId);
             return true; 
         }
-        
-        var newUser = mapper.Map<Models.User>(userDto);
-        await repository.AddAsync(newUser);
-        await repository.SaveChangesAsync();
     
-        return true;
+       
+        var newUser = mapper.Map<Models.User>(userDto);
+    
+        try 
+        {
+            await repository.AddAsync(newUser);
+            await repository.SaveChangesAsync();
+            
+            logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+           
+            logger.LogError(ex, "Failed to register new user {UserId}", userDto.UserId);
+            throw;
+        }
     }
 
     public async Task<bool> IsUserExists(long userId)

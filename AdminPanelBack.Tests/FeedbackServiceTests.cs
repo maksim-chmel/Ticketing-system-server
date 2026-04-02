@@ -5,6 +5,7 @@ using AdminPanelBack.Services.Feedback;
 using AutoMapper;
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AdminPanelBack.Tests;
 
@@ -27,7 +28,7 @@ public class FeedbackServiceTests
                 Status = f.Status
             }).ToList());
 
-        _service = new FeedbackService(_mockRepo.Object, mockMapper.Object);
+        _service = new FeedbackService(_mockRepo.Object, mockMapper.Object,NullLogger<FeedbackService>.Instance);
     }
 
     [Fact]

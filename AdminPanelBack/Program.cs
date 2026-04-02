@@ -17,10 +17,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Prometheus;
 using Serilog;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
+
 
 
 Env.Load();
@@ -101,18 +99,6 @@ builder.Services.Configure<JwtSettings>(options =>
     options.ExpiresInMinutes = jwtSettings.ExpiresInMinutes;
 });
 
-
-builder.Services.AddOpenTelemetry()
-    .WithMetrics(metrics =>
-    {
-        metrics
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("AdminPanelBack"))
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddPrometheusExporter();
-    });
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -158,7 +144,8 @@ using (var scope = app.Services.CreateScope())
         
         dbContext.Database.Migrate();
         await SeedAdmin.SeedAdminAsync(userManager, roleManager);
-        Log.Information("Database connected and migrations applied");
+        Log.Information("Migration check finished. Database: {DbName}. Admin seeded: {AdminStatus}", 
+            dbContext.Database.GetDbConnection().Database, true);
     }
     catch (Exception ex)
     {
@@ -170,17 +157,25 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
-
+app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseOpenTelemetryPrometheusScrapingEndpoint();
-app.UseMetricServer();
-app.UseHttpMetrics();
-
 app.MapControllers();
 
-app.Run();
+try
+{
+    Log.Information("Starting web host");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
