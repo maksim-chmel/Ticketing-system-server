@@ -8,6 +8,7 @@ public class UserProfile:Profile
 {
     public UserProfile()
     {
-        CreateMap<User, UserDto>();
+        CreateMap<User, UserDto>().ReverseMap()
+            .ForMember(dest => dest.Feedbacks, opt => opt.Ignore());
     }
 }
