@@ -1,5 +1,5 @@
+using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
-using AdminPanelBack.Services;
 using AdminPanelBack.Services.Feedback;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +13,7 @@ public class FeedbackController(IFeedbackService feedbackService,
     : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Feedback>>> GetAll()
+    public async Task<ActionResult<List<FeedbackDto>>> GetAll()
     {
         logger.LogInformation("Fetching all feedbacks");
         try

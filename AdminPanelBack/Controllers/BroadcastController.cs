@@ -1,3 +1,4 @@
+using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
 using AdminPanelBack.Services.Broadcast;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace AdminPanelBack.Controllers;
 public class BroadcastController(IBroadcastMessageService service) : ControllerBase
 {
     [HttpPost("add-broadcastMessage")]
-    public async Task<IActionResult> AddBroadcastMessage([FromBody] BroadcastMessage request)
+    public async Task<IActionResult> AddBroadcastMessage([FromBody] CreateBroadcastMessageRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Message))
         {

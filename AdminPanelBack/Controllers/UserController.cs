@@ -1,6 +1,4 @@
-using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
-using AdminPanelBack.Services;
 using AdminPanelBack.Services.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +17,7 @@ public class UserController(IUserService service,
         try
         {
             var result = await service.GetAllUsers();
-            logger.LogInformation("Retrieved {Count} users", result?.Count() ?? 0);
+            logger.LogInformation("Retrieved {Count} users", result.Count);
             return Ok(result);
         }
         catch (Exception ex)

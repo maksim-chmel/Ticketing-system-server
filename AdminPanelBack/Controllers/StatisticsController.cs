@@ -1,4 +1,3 @@
-using AdminPanelBack.Services;
 using AdminPanelBack.Services.Statistic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +16,7 @@ public class StatisticsController(IStatisticsService service, ILogger<Statistics
         try
         {
             var result = await service.GetStatusDistributionAsync();
-            logger.LogInformation("Status distribution retrieved successfully, count: {Count}", result?.Count() ?? 0);
+            logger.LogInformation("Status distribution retrieved successfully, count: {Count}", result.Count);
             return Ok(result);
         }
         catch (Exception ex)
@@ -34,7 +33,7 @@ public class StatisticsController(IStatisticsService service, ILogger<Statistics
         try
         {
             var result = await service.GetRequestsOverTimeAsync();
-            logger.LogInformation("Requests over time retrieved successfully, count: {Count}", result?.Count() ?? 0);
+            logger.LogInformation("Requests over time retrieved successfully, count: {Count}", result.Count);
             return Ok(result);
         }
         catch (Exception ex)

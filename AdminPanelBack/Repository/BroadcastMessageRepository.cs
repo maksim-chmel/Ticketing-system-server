@@ -1,6 +1,5 @@
 using AdminPanelBack.DB;
 using AdminPanelBack.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Repository;

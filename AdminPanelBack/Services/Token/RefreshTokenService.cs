@@ -72,7 +72,7 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         logger.LogInformation("Revoked {Count} tokens for user {UserId}", tokens.Count, userId);
     }
 
-    public async Task<RefreshToken> GetRefreshToken(string refreshToken)
+    public async Task<RefreshToken?> GetRefreshToken(string refreshToken)
     {
         logger.LogInformation("Fetching refresh token");
 

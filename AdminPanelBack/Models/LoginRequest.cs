@@ -1,7 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AdminPanelBack.Models;
 
 public class LoginRequest
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    [Required]
+    [MaxLength(100)]
+    public required string Username { get; set; }
+    
+    [Required]
+    [MaxLength(100)]
+    public required string Password { get; set; }
 }

@@ -1,7 +1,5 @@
-using AdminPanelBack.Controllers;
 using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
-using AdminPanelBack.Services.Feedback;
 using AutoMapper;
 
 namespace AdminPanelBack.Profiles;
