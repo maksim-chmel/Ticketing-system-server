@@ -46,21 +46,12 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
     
        
         var newUser = mapper.Map<Models.User>(userDto);
-    
-        try 
-        {
-            await repository.AddAsync(newUser);
-            await repository.SaveChangesAsync();
-            
-            logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
-            return true;
-        }
-        catch (Exception ex)
-        {
-           
-            logger.LogError(ex, "Failed to register new user {UserId}", userDto.UserId);
-            throw;
-        }
+
+        await repository.AddAsync(newUser);
+        await repository.SaveChangesAsync();
+        
+        logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
+        return true;
     }
 
     public async Task<bool> IsUserExists(long userId)

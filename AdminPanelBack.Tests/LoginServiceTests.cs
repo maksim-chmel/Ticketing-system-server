@@ -2,6 +2,7 @@ using AdminPanelBack.Models;
 using AdminPanelBack.Services.Auth;
 using AdminPanelBack.Services.Login;
 using AdminPanelBack.Services.Token;
+using AdminPanelBack.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -39,7 +40,7 @@ public class LoginServiceTests
         _mockRefreshTokenService.Setup(r =>r.GetRefreshToken("invalid_token")).
             ReturnsAsync((RefreshToken?)null);
         await _service.Invoking(s => s.RefreshTokensAsync("invalid_token")).Should()
-            .ThrowAsync<UnauthorizedAccessException>();
+            .ThrowAsync<UnauthorizedException>();
 
     }
     [Fact]
@@ -61,7 +62,7 @@ public class LoginServiceTests
     {
         _mockRefreshTokenService.Setup(r => r.GetRefreshToken("valid_token"))
             .ReturnsAsync(new RefreshToken { UserId = "123" });
-        await _service.Invoking(s => s.RefreshTokensAsync("valid_token")).Should().ThrowAsync<UnauthorizedAccessException>();
+        await _service.Invoking(s => s.RefreshTokensAsync("valid_token")).Should().ThrowAsync<UnauthorizedException>();
 
     }
     [Fact]

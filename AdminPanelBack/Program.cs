@@ -141,15 +141,17 @@ using (var scope = app.Services.CreateScope())
         var dbContext = services.GetRequiredService<AppDbContext>();
         var userManager = services.GetRequiredService<UserManager<Admin>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var env = services.GetRequiredService<IHostEnvironment>();
         
         dbContext.Database.Migrate();
-        await SeedAdmin.SeedAdminAsync(userManager, roleManager);
-        Log.Information("Migration check finished. Database: {DbName}. Admin seeded: {AdminStatus}", 
-            dbContext.Database.GetDbConnection().Database, true);
+        var seeded = await SeedAdmin.SeedAdminAsync(userManager, roleManager, builder.Configuration, env);
+        Log.Information("Migration check finished. Database: {DbName}. Admin seeded: {AdminStatus}",
+            dbContext.Database.GetDbConnection().Database, seeded);
     }
     catch (Exception ex)
     {
         Log.Error(ex, "Migration error");
+        throw;
     }
 }
 

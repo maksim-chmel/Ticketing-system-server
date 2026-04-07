@@ -1,5 +1,6 @@
 using AdminPanelBack.Models;
 using AdminPanelBack.Services.Auth;
+using AdminPanelBack.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -20,15 +21,15 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task FindAdminByUsernameOrThrow_WhenUsernameIsEmpty_ThrowsArgumentException()
+    public async Task FindAdminByUsernameOrThrow_WhenUsernameIsEmpty_ThrowsValidationException()
     {
-       await _service.Invoking(s => s.FindAdminByUsernameOrThrow("")).Should().ThrowAsync<ArgumentException>();
+       await _service.Invoking(s => s.FindAdminByUsernameOrThrow("")).Should().ThrowAsync<ValidationException>();
     }
 
     [Fact]
-    public async Task FindAdminByUsernameOrThrow_WhenUserNotFound_ThrowsInvalidOperationException()
+    public async Task FindAdminByUsernameOrThrow_WhenUserNotFound_ThrowsNotFoundException()
     {
-        await _service.Invoking(s => s.FindAdminByUsernameOrThrow("invalid_username")).Should().ThrowAsync<InvalidOperationException>();
+        await _service.Invoking(s => s.FindAdminByUsernameOrThrow("invalid_username")).Should().ThrowAsync<NotFoundException>();
     }
 
     [Fact]
@@ -49,16 +50,16 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task CheckPasswordOrThrow_WhenPasswordIsEmpty_ThrowsArgumentException()
+    public async Task CheckPasswordOrThrow_WhenPasswordIsEmpty_ThrowsValidationException()
     {
-        await _service.Invoking(s=>s.CheckPasswordOrThrow(new Admin(),null)).Should().ThrowAsync<ArgumentException>();
+        await _service.Invoking(s=>s.CheckPasswordOrThrow(new Admin(),null)).Should().ThrowAsync<ValidationException>();
     }
 
     [Fact]
     public async Task CheckPasswordOrThrow_WhenPasswordIsInvalid_ThrowsUnauthorizedException()
     {
         mockerUserManager.PasswordResult = false;
-        await _service.Invoking(s =>s.CheckPasswordOrThrow(new Admin(),"password")).Should().ThrowAsync<UnauthorizedAccessException>();
+        await _service.Invoking(s =>s.CheckPasswordOrThrow(new Admin(),"password")).Should().ThrowAsync<UnauthorizedException>();
     }
 
     [Fact]

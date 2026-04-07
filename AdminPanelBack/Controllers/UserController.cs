@@ -14,33 +14,17 @@ public class UserController(IUserService service,
     public async Task<IActionResult> GetUsersToList()
     {
         logger.LogInformation("Fetching user list");
-        try
-        {
-            var result = await service.GetAllUsers();
-            logger.LogInformation("Retrieved {Count} users", result.Count);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving user list");
-            return StatusCode(500, "Internal server error");
-        }
+        var result = await service.GetAllUsers();
+        logger.LogInformation("Retrieved {Count} users", result.Count);
+        return Ok(result);
     }
 
     [HttpPost("update-comment")]
     public async Task<IActionResult> UpdateUserComment([FromBody] UpdateCommentRequest request)
     {
         logger.LogInformation("Updating comment for user Id={UserId}", request.UserId);
-        try
-        {
-            var result = await service.ManageComment(request.UserId, request.Comment);
-            logger.LogInformation("Comment for user Id={UserId} updated successfully", request.UserId);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error updating comment for user Id={UserId}", request.UserId);
-            return StatusCode(500, "Internal server error");
-        }
+        var result = await service.ManageComment(request.UserId, request.Comment);
+        logger.LogInformation("Comment for user Id={UserId} updated successfully", request.UserId);
+        return Ok(result);
     }
 }

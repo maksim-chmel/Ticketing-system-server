@@ -5,10 +5,37 @@ namespace AdminPanelBack;
 
 public static class SeedAdmin
 {
-   public static async Task SeedAdminAsync(UserManager<Admin> userManager, RoleManager<IdentityRole> roleManager)
+   public static async Task<bool> SeedAdminAsync(
+       UserManager<Admin> userManager,
+       RoleManager<IdentityRole> roleManager,
+       IConfiguration configuration,
+       IHostEnvironment env)
     {
-        var adminEmail = "admin@example.com";
-        var adminPassword = "Admin@123";
+        var adminEmail =
+            configuration["ADMIN_EMAIL"] ??
+            configuration["SeedAdmin:Email"];
+
+        var adminPassword =
+            configuration["ADMIN_PASSWORD"] ??
+            configuration["SeedAdmin:Password"];
+
+        var adminName =
+            configuration["ADMIN_NAME"] ??
+            configuration["SeedAdmin:Name"] ??
+            "Super Admin";
+
+        if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+        {
+            if (env.IsDevelopment())
+            {
+                adminEmail ??= "admin@example.com";
+                adminPassword ??= "Admin@123";
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         if (!await roleManager.RoleExistsAsync("Admin"))
             await roleManager.CreateAsync(new IdentityRole("Admin"));
@@ -19,19 +46,18 @@ public static class SeedAdmin
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                Name = "Super Admin"
+                Name = adminName
             };
 
             var result = await userManager.CreateAsync(admin, adminPassword);
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(admin, "Admin");
+                return true;
             }
-            else
-            {
-                foreach (var error in result.Errors)
-                    Console.WriteLine($"❌ {error.Description}");
-            }
+            return false;
         }
+
+        return true;
     }
 }

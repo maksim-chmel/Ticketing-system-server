@@ -16,35 +16,18 @@ public class FeedbackController(IFeedbackService feedbackService,
     public async Task<ActionResult<List<FeedbackDto>>> GetAll()
     {
         logger.LogInformation("Fetching all feedbacks");
-        try
-        {
-            var feedbacks = await feedbackService.GetAllFeedbacksAsync();
-            logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
-            return Ok(feedbacks);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error retrieving feedbacks");
-            return StatusCode(500, "Internal server error");
-        }
+        var feedbacks = await feedbackService.GetAllFeedbacksAsync();
+        logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
+        return Ok(feedbacks);
     }
 
     [HttpPost("update-status/{id}")]
     public async Task<IActionResult> UpdateStatus(int id, [FromQuery] FeedbackStatus status)
     {
-        try
-        {
-            var feedback = await feedbackService.UpdateStatus(id,status);
-            if (!feedback)
-            {
-                return NotFound($"Feedback with id {id} not found");
-            }
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error updating status of feedback Id={Id}", id);
-            return StatusCode(500, "Internal server error");
-        }
+        var updated = await feedbackService.UpdateStatus(id, status);
+        if (!updated)
+            return NotFound($"Feedback with id {id} not found");
+
+        return Ok();
     }
 }
