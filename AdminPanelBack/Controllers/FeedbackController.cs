@@ -1,5 +1,4 @@
 using AdminPanelBack.DTO;
-using AdminPanelBack.Models;
 using AdminPanelBack.Services.Feedback;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminPanelBack.Controllers;
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/feedbacks")]
 public class FeedbackController(IFeedbackService feedbackService,
     ILogger<FeedbackController> logger)
     : ControllerBase
@@ -21,13 +20,13 @@ public class FeedbackController(IFeedbackService feedbackService,
         return Ok(feedbacks);
     }
 
-    [HttpPost("update-status/{id}")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromQuery] FeedbackStatus status)
+    [HttpPatch("{id:int}")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request)
     {
-        var updated = await feedbackService.UpdateStatus(id, status);
+        var updated = await feedbackService.UpdateStatus(id, request.Status);
         if (!updated)
-            return NotFound($"Feedback with id {id} not found");
+            return NotFound();
 
-        return Ok();
+        return NoContent();
     }
 }

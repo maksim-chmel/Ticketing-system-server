@@ -16,7 +16,6 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
         };
        await repository.CreateBroadcastMessage(newBroadcastMessage);
        logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
-       
     }
 
     public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive()

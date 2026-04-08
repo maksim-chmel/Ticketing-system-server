@@ -6,61 +6,64 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/operator")]
 public class BotFeedbackController(
-    IFeedbackService feedbackService,IUserService userService, IBroadcastMessageService broadcastMessageService)
+    IFeedbackService feedbackService,
+    IUserService userService,
+    IBroadcastMessageService broadcastMessageService)
     : ControllerBase
 {
-    [HttpPost("new-feedback")]
-    public async Task<IActionResult> NewFeedback([FromBody] UsersMessageDto messageDto)
+    [HttpPost("feedbacks")]
+    public async Task<IActionResult> CreateFeedback([FromBody] UsersMessageDto messageDto)
     {
-        if (string.IsNullOrWhiteSpace(messageDto.Comment))
-            return BadRequest("Comment is required.");
-
         await feedbackService.CreateFeedbackAsync(messageDto);
-        return Ok();
+        return NoContent();
     }
-    [HttpGet("all-users")]
-    public async Task<IActionResult> GetAllUsers()
+
+    [HttpGet("user-ids")]
+    public async Task<ActionResult<List<long>>> GetUserIds()
     {
-        var userIds = await userService.GetAllUsersIds(); 
+        var userIds = await userService.GetAllUsersIds();
         return Ok(userIds);
     }
 
-    [HttpPost("register-new-User")]
-    public async Task<IActionResult> RegisterNewUser([FromBody] UserDto userDto)
+    [HttpGet("users/{userId:long}")]
+    public async Task<ActionResult<UserDto>> GetUser(long userId)
     {
-        if (userDto.UserId <= 0) 
-            return BadRequest("UserID is required.");
-        
-        var result = await userService.RegistrationNewUser(userDto);
-        if (result)
-        {
-            return Ok();
-        }
+        var user = await userService.GetUserById(userId);
+        return user == null ? NotFound() : Ok(user);
+    }
 
-        return BadRequest(new { success = false, message = "Registration failed" });
-    }
-    [HttpGet("exists/{userId}")]
-    public async Task<IActionResult> CheckUserExists(long userId)
+    [HttpPut("users/{userId:long}")]
+    public async Task<IActionResult> UpsertUser(long userId, [FromBody] UserDto userDto)
     {
-        var user = await userService.IsUserExists(userId);
-        return Ok(user);
+        if (userDto.UserId != 0 && userDto.UserId != userId)
+            return ValidationProblem("userId in body must match route userId");
+
+        userDto.UserId = userId;
+        var result = await userService.RegistrationNewUser(userDto);
+        if (!result)
+            return Problem("Registration failed", statusCode: StatusCodes.Status400BadRequest);
+
+        return NoContent();
     }
-    [HttpGet("user-feedbacks/{userId}")]
+
+    [HttpGet("users/{userId:long}/feedbacks")]
     public async Task<IActionResult> GetUserFeedbacks(long userId)
     {
         var feedbacks = await feedbackService.GetAllUsersFeedbacksAsync(userId);
-        return Ok(feedbacks); 
+        return Ok(feedbacks);
     }
-    [HttpGet("broadcast-messages")]
-    public async Task<IActionResult> GetBroadcastMessages()
+
+    [HttpPost("broadcast-message-pulls")]
+    public async Task<IActionResult> PullBroadcastMessages()
     {
         var messages = await broadcastMessageService.GetActiveBroadcastMessagesAndMakeInactive();
         return Ok(messages);
     }
-    [HttpGet("unnotified-feedbacks")]
-    public async Task<IActionResult> GetUnnotified()
+
+    [HttpPost("unnotified-feedback-pulls")]
+    public async Task<IActionResult> PullUnnotifiedFeedbacks()
     {
         var list = await feedbackService.GetNewFeedbacksForOperatorAsync();
         return Ok(list);

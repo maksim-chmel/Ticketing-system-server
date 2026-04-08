@@ -9,4 +9,5 @@ public interface IUserService
     Task<bool> RegistrationNewUser(UserDto userDto);
     Task<bool> IsUserExists(long userId);
     Task<List<long>> GetAllUsersIds();
+    Task<UserDto?> GetUserById(long userId);
 }

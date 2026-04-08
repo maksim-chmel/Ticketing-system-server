@@ -80,34 +80,48 @@ AdminPanelBack/
 
 ## API Endpoints
 
+All routes are prefixed with `/api`.
+
 ### Auth
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| POST | `/api/auth/login` | Public | Login, returns access token; sets refresh token cookie |
-| POST | `/api/auth/refresh` | Cookie | Rotates token pair |
+| POST | `/auth/login` | Public | Login, returns access token; sets HttpOnly `refreshToken` cookie |
+| POST | `/auth/refresh` | Cookie | Refresh access token using `refreshToken` cookie (rotates refresh token) |
 
-### Feedback (tickets)
+### Users (admin panel)
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/feedback` | Bearer | Get all tickets |
-| POST | `/api/feedback/update-status/{id}?status={value}` | Bearer | Update ticket status |
+| GET | `/users` | Bearer | List users |
+| GET | `/users/{userId:long}` | Bearer | Get user by id |
+| PATCH | `/users/{userId:long}/comment` | Bearer | Update admin comment (`UpdateUserCommentRequest`) |
 
-### Users
+### Feedbacks (tickets)
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/user/users-to-list` | Bearer | Get user list |
-| POST | `/api/user/update-comment` | Bearer | Add/update admin comment on user |
+| GET | `/feedbacks` | Bearer | List all feedback tickets |
+| PATCH | `/feedbacks/{id:int}` | Bearer | Update ticket status (`UpdateFeedbackStatusRequest`) |
 
 ### Statistics
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/statistics/status-distribution` | Bearer | Ticket count by status |
-| GET | `/api/statistics/requests-over-time` | Bearer | Ticket volume over time |
+| GET | `/statistics/status-distribution` | Bearer | Ticket count by status |
+| GET | `/statistics/requests-over-time` | Bearer | Ticket volume over time |
 
-### Broadcast
+### Broadcast messages
 | Method | Route | Auth | Description |
 |---|---|---|---|
-| POST | `/api/broadcast/add-broadcastMessage` | Bearer | Queue a broadcast message |
+| POST | `/broadcast-messages` | Bearer | Queue a broadcast message (`CreateBroadcastMessageRequest`), returns `204` |
+
+### Operator API (used by bots)
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| POST | `/operator/feedbacks` | Public | Create feedback (`UsersMessageDto`), returns `204` |
+| GET | `/operator/user-ids` | Public | Get all user ids |
+| GET | `/operator/users/{userId:long}` | Public | Get user by id |
+| PUT | `/operator/users/{userId:long}` | Public | Upsert user (`UserDto`), returns `204` |
+| GET | `/operator/users/{userId:long}/feedbacks` | Public | List feedbacks for a user |
+| POST | `/operator/broadcast-message-pulls` | Public | Pull active broadcast messages and mark them inactive |
+| POST | `/operator/unnotified-feedback-pulls` | Public | Pull unnotified feedbacks and mark them as sent to operator |
 
 ### Metrics
 | Route | Description |
@@ -135,6 +149,12 @@ JWT_AUDIENCE=frontadminpanel
 JWT_EXPIRES_IN_MINUTES=60
 CORS_ORIGIN=http://localhost:3000
 SEQ_URL=http://localhost:5341
+```
+
+If you're using the included `compose.yaml`, PostgreSQL is exposed on host port `5433`:
+
+```env
+DefaultConnection=Host=localhost;Port=5433;Database=feedbackdb;Username=postgres;Password=yourpassword
 ```
 
 ### Run locally

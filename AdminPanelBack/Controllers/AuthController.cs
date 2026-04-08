@@ -4,22 +4,26 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController(ILogger<AuthController> logger,ILoginService loginService) : ControllerBase
 {
+    private const string RefreshTokenCookie = "refreshToken";
+
+    private static CookieOptions RefreshCookieOptions() => new()
+    {
+        HttpOnly = true,
+        Secure = false,
+        SameSite = SameSiteMode.Strict,
+        Expires = DateTime.UtcNow.AddDays(7)
+    };
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var (accessToken, refreshToken) = await loginService.AuthenticateAsync
             (request.Username, request.Password);
 
-        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(7)
-        });
+        Response.Cookies.Append(RefreshTokenCookie, refreshToken, RefreshCookieOptions());
 
         logger.LogInformation("User {Username} logged in successfully", request.Username);
         return Ok(new { accessToken });
@@ -28,18 +32,12 @@ public class AuthController(ILogger<AuthController> logger,ILoginService loginSe
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
-        var refreshToken = Request.Cookies["refreshToken"];
+        var refreshToken = Request.Cookies[RefreshTokenCookie];
         if (string.IsNullOrEmpty(refreshToken))
             return Unauthorized("Refresh token not found");
         var (accessToken, newRefreshToken, _) = 
                 await loginService.RefreshTokensAsync(refreshToken);
-            Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = false,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
-            });
+            Response.Cookies.Append(RefreshTokenCookie, newRefreshToken, RefreshCookieOptions());
 
             return Ok(new { accessToken });
         

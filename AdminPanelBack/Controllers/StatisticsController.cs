@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminPanelBack.Controllers;
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/statistics")]
 public class StatisticsController(IStatisticsService service, ILogger<StatisticsController> logger)
     : ControllerBase
 {
@@ -19,7 +19,7 @@ public class StatisticsController(IStatisticsService service, ILogger<Statistics
     }
 
     [HttpGet("requests-over-time")]
-    public async Task<IActionResult> GetRequestsOverTimeAsync()
+    public async Task<IActionResult> GetRequestsOverTime()
     {
         logger.LogInformation("Fetching requests over time");
         var result = await service.GetRequestsOverTimeAsync();

@@ -59,6 +59,12 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         var user = await repository.FindAsyncById(userId);
         return user != null;
     }
+
+    public async Task<UserDto?> GetUserById(long userId)
+    {
+        var user = await repository.FindAsyncById(userId);
+        return user == null ? null : mapper.Map<UserDto>(user);
+    }
     
    
 }

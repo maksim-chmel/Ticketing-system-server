@@ -6,7 +6,7 @@ namespace AdminPanelBack.DB;
 public class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<Admin>(options)
 {
-    public DbSet<User> Users { get; set; }
+    public  DbSet<User> Clients { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<BroadcastMessage> BroadcastMessages { get; set; }
