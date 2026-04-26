@@ -1,0 +1,229 @@
+AdminPanelBack API — Quick Reference (English)
+============================================
+
+Base URL
+--------
+- All routes are prefixed with: /api
+- Typical local dev URL: http://localhost:8080/api (or whatever host/port you run the app on)
+
+Auth overview
+-------------
+- Access: JWT Bearer token (Authorization: Bearer <accessToken>)
+- Refresh: HttpOnly cookie named "refreshToken"
+
+Status codes conventions
+------------------------
+- 200 OK: successful request with response body
+- 201 Created: resource created (not used for broadcast create in this project)
+- 204 NoContent: successful request with no response body
+- 400 BadRequest: validation / request is invalid
+- 401 Unauthorized: missing/invalid credentials (or missing refresh cookie for /auth/refresh)
+- 404 NotFound: resource does not exist
+
+
+1) Auth
+=======
+
+POST /api/auth/login
+--------------------
+Auth: Public
+Body (LoginRequest):
+{
+  "username": "string",
+  "password": "string"
+}
+Response:
+- 200 OK:
+  {
+    "accessToken": "string"
+  }
+  + sets HttpOnly cookie "refreshToken"
+
+POST /api/auth/refresh
+----------------------
+Auth: Requires cookie "refreshToken"
+Body: none
+Response:
+- 200 OK:
+  {
+    "accessToken": "string"
+  }
+  + rotates/updates HttpOnly cookie "refreshToken"
+- 401 Unauthorized: if cookie missing
+
+
+2) Users (Admin panel)
+======================
+All endpoints below require: Bearer JWT
+
+GET /api/users
+--------------
+Response:
+- 200 OK: UserDto[]
+
+GET /api/users/{userId:long}
+----------------------------
+Response:
+- 200 OK: UserDto
+- 404 NotFound
+
+PATCH /api/users/{userId:long}/comment
+--------------------------------------
+Body (UpdateUserCommentRequest):
+{
+  "comment": "string"
+}
+Validation:
+- comment: required, max length 2000
+Response:
+- 200 OK: updated user object (current implementation returns a user entity)
+
+
+3) Feedbacks (Tickets)
+======================
+All endpoints below require: Bearer JWT
+
+GET /api/feedbacks
+------------------
+Response:
+- 200 OK: FeedbackDto[]
+
+PATCH /api/feedbacks/{id:int}
+-----------------------------
+Body (UpdateFeedbackStatusRequest):
+{
+  "status": "FeedbackStatus"
+}
+Response:
+- 204 NoContent: updated
+- 404 NotFound: feedback not found
+
+FeedbackStatus
+--------------
+Enum defined in backend (see: AdminPanelBack/Services/Feedback/FeedbackStatus.cs).
+Frontend should use the same values (string or number depends on JSON enum settings).
+
+
+4) Statistics
+=============
+All endpoints below require: Bearer JWT
+
+GET /api/statistics/status-distribution
+---------------------------------------
+Response:
+- 200 OK: StatusDistributionDto[]
+
+GET /api/statistics/requests-over-time
+--------------------------------------
+Response:
+- 200 OK: TimeDisrtibutionDto[]
+
+
+5) Broadcast messages
+=====================
+All endpoints below require: Bearer JWT
+
+POST /api/broadcast-messages
+----------------------------
+Body (CreateBroadcastMessageRequest):
+{
+  "message": "string"
+}
+Validation:
+- message: required, max length 4000
+Response:
+- 204 NoContent: created/queued
+
+
+6) Operator API (used by bots)
+==============================
+NOTE: In current code these endpoints are public (no [Authorize] attribute on controller).
+
+POST /api/operator/feedbacks
+----------------------------
+Body (UsersMessageDto):
+{
+  "userId": 123,
+  "comment": "string",
+  "createdDate": "2026-04-08T12:34:56Z",
+  "status": "FeedbackStatus"
+}
+Validation:
+- userId: must be >= 1
+- comment: required, max length 4000
+Response:
+- 204 NoContent
+
+GET /api/operator/user-ids
+--------------------------
+Response:
+- 200 OK: long[]
+
+GET /api/operator/users/{userId:long}
+-------------------------------------
+Response:
+- 200 OK: UserDto
+- 404 NotFound
+
+PUT /api/operator/users/{userId:long}
+-------------------------------------
+Behavior: upsert user by id (create if missing, otherwise update)
+Body (UserDto):
+{
+  "userId": 123,              // optional in request; if present must match route
+  "phone": "string|null",
+  "firstName": "string|null",
+  "lastName": "string|null",
+  "username": "string|null",
+  "comments": "string|null"
+}
+Response:
+- 204 NoContent: success
+- 400 BadRequest: if userId in body is present and does not match route userId
+
+GET /api/operator/users/{userId:long}/feedbacks
+-----------------------------------------------
+Response:
+- 200 OK: FeedbackDto[]
+
+POST /api/operator/broadcast-message-pulls
+------------------------------------------
+Behavior: returns active broadcast messages AND marks them inactive.
+Response:
+- 200 OK: BroadcastMessage[]
+
+POST /api/operator/unnotified-feedback-pulls
+--------------------------------------------
+Behavior: returns feedbacks that were not sent to operator AND marks them as sent.
+Response:
+- 200 OK: FeedbackDto[]
+
+
+DTO quick field list
+====================
+
+UserDto
+-------
+{
+  "userId": long,
+  "phone": "string|null",
+  "firstName": "string|null",
+  "lastName": "string|null",
+  "username": "string|null",
+  "comments": "string|null"
+}
+
+BroadcastMessage (model)
+------------------------
+{
+  "id": int,
+  "message": "string",
+  "created": "datetime",
+  "isActive": boolean
+}
+
+Notes for local DB / migrations
+===============================
+- compose.yaml exposes PostgreSQL on host port 5433 (container 5432).
+- If you run DB locally without Docker, typical port is 5432.
+
