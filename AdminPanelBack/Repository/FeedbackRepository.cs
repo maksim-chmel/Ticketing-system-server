@@ -56,7 +56,7 @@ public class FeedbackRepository(AppDbContext dbContext)
         // но для полной совместимости с предыдущим API, мы получаем полные объекты.
         var list = await _dbContext.Feedbacks
             .Include(f => f.User)
-            .Where(f => f.IsSentToOperator && f.CreatedDate >= EF.Functions.DateAdd(EF.Functions.Now, "day", -1))
+            .Where(f => f.IsSentToOperator && f.CreatedDate >= DateTime.UtcNow.AddDays(-1))
             .OrderByDescending(f => f.CreatedDate)
             .Take(take)
             .ToListAsync();

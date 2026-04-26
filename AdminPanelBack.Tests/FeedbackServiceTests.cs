@@ -1,3 +1,4 @@
+using AdminPanelBack.DB;
 using AdminPanelBack.DTO;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
@@ -6,17 +7,21 @@ using AutoMapper;
 using FluentAssertions;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Tests;
 
 public class FeedbackServiceTests
 {
     private readonly Mock<IFeedbackRepository> _mockRepo;
+    private readonly Mock<AppDbContext> _mockDbContext;
     private readonly FeedbackService _service;
 
     public FeedbackServiceTests()
     {
         _mockRepo = new Mock<IFeedbackRepository>();
+        _mockDbContext = new Mock<AppDbContext>(new DbContextOptions<AppDbContext>());
+
         var mockMapper = new Mock<IMapper>();
         mockMapper.Setup(m => m.Map<List<FeedbackDto>>(It.IsAny<List<Feedback>>()))
             .Returns((List<Feedback> src) => src.Select(f => new FeedbackDto
@@ -27,7 +32,14 @@ public class FeedbackServiceTests
                 Status = f.Status
             }).ToList());
 
-        _service = new FeedbackService(_mockRepo.Object, mockMapper.Object,NullLogger<FeedbackService>.Instance);
+        mockMapper.Setup(m => m.Map<Feedback>(It.IsAny<UsersMessageDto>()))
+            .Returns((UsersMessageDto dto) => new Feedback
+            {
+                UserId = dto.UserId,
+                Comment = dto.Comment
+            });
+        
+        _service = new FeedbackService(_mockRepo.Object, mockMapper.Object,NullLogger<FeedbackService>.Instance, _mockDbContext.Object);
     }
 
     [Fact]
@@ -75,7 +87,7 @@ public class FeedbackServiceTests
 
         
         feedback.Status.Should().Be(FeedbackStatus.Done);
-        _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Once);
+        _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -88,7 +100,7 @@ public class FeedbackServiceTests
         await _service.UpdateStatus(99, FeedbackStatus.Done);
 
         
-        _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Never);
+        _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -126,6 +138,18 @@ public class FeedbackServiceTests
 
        
         feedback.Status.Should().Be(newStatus);
-        _mockRepo.Verify(r => r.SaveChangesAsync(), Times.Once);
+        _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateFeedbackAsync_WhenCalled_AddsFeedbackAndSaves()
+    {
+        var dto = new UsersMessageDto { UserId = 1, Comment = "New feedback" };
+        _mockRepo.Setup(r => r.AddFeedbackAsync(It.IsAny<Feedback>()));
+        
+        await _service.CreateFeedbackAsync(dto);
+
+        _mockRepo.Verify(r => r.AddFeedbackAsync(It.IsAny<Feedback>()), Times.Once);
+        _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
