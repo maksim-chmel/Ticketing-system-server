@@ -12,7 +12,6 @@ namespace AdminPanelBack.Tests;
 public class FeedbackServiceTests
 {
     private readonly Mock<IFeedbackRepository> _mockRepo;
-    private readonly IMapper _mapper;
     private readonly FeedbackService _service;
 
     public FeedbackServiceTests()
@@ -40,10 +39,10 @@ public class FeedbackServiceTests
             new() { Id = 1, UserId = 100, Comment = "Great service", Status = FeedbackStatus.Open },
             new() { Id = 2, UserId = 200, Comment = "Issue with login", Status = FeedbackStatus.InProgress }
         };
-        _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(feedbacks);
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(feedbacks);
 
        
-        var result = await _service.GetAllFeedbacksAsync();
+        var result = await _service.GetAllFeedbacksAsync(1, 50);
 
         
         result.Should().HaveCount(2);
@@ -55,10 +54,10 @@ public class FeedbackServiceTests
     public async Task GetAllFeedbacksAsync_WhenNoFeedbacks_ReturnsEmptyList()
     {
         
-        _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(new List<Feedback>());
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>());
 
         
-        var result = await _service.GetAllFeedbacksAsync();
+        var result = await _service.GetAllFeedbacksAsync(1, 50);
 
        
         result.Should().BeEmpty();
@@ -95,17 +94,17 @@ public class FeedbackServiceTests
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenOneFeedbackExists_ReturnsIt()
     {
-        _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(new List<Feedback>{new (){Id = 5}});
-        var result = await _service.GetAllFeedbacksAsync();
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>{new (){Id = 5}});
+        var result = await _service.GetAllFeedbacksAsync(1, 50);
         result.Should().HaveCount(1);
         result[0].Id.Should().Be(5);
     }
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenFeedbacksHaveDifferentStatus_ReturnsIt()
     {
-        _mockRepo.Setup(r => r.GetAllFeedbacksAsync()).ReturnsAsync(new List<Feedback>{new (){Status =  FeedbackStatus.Open},
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>{new (){Status =  FeedbackStatus.Open},
             new(){Status =  FeedbackStatus.InProgress } } );
-        var result = await _service.GetAllFeedbacksAsync();
+        var result = await _service.GetAllFeedbacksAsync(1, 50);
         result.Should().HaveCount(2);
         
         result[0].Status.Should().Be(FeedbackStatus.Open);

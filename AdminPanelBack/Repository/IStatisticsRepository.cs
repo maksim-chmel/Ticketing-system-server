@@ -1,9 +1,9 @@
-using AdminPanelBack.DTO;
+using AdminPanelBack.Models.Statistics;
 
 namespace AdminPanelBack.Repository;
 
 public interface IStatisticsRepository
 {
-    Task<List<StatusDistributionDto>> GetStatusDistributionAsync();
-    Task<List<TimeDisrtibutionDto>> GetRequestsOverTimeAsync();
+    Task<List<StatusDistributionItem>> GetStatusDistributionAsync();
+    Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsync();
 }

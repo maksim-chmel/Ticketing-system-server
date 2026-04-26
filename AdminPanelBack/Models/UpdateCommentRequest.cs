@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AdminPanelBack.Models;
 
+/*
 public class UpdateCommentRequest
 {
     public long UserId { get; set; }
@@ -10,3 +11,4 @@ public class UpdateCommentRequest
     [MaxLength(2000)]
     public required string Comment { get; set; }
 }
+*/

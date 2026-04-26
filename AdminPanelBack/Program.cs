@@ -17,23 +17,28 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Metrics;
 using Serilog;
-
-
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["DefaultConnection"];
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                       ?? builder.Configuration["DefaultConnection"] 
-                       ?? throw new Exception("DefaultConnection not set");
+if (string.IsNullOrWhiteSpace(connectionString) && builder.Environment.IsDevelopment())
+{
+    connectionString = "Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=postgres";
+}
+
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new Exception("DefaultConnection not set");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -41,7 +46,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -58,7 +62,6 @@ builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageReposito
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -71,16 +74,25 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(8080); 
 });
 
+var secretKey = builder.Configuration["JWT_SECRET_KEY"];
+var issuer = builder.Configuration["JWT_ISSUER"];
+var audience = builder.Configuration["JWT_AUDIENCE"];
 
-var secretKey = builder.Configuration["JWT_SECRET_KEY"] ?? throw new Exception("JWT_SECRET_KEY not set");
-var issuer = builder.Configuration["JWT_ISSUER"] ?? throw new Exception("JWT_ISSUER not set");
-var audience = builder.Configuration["JWT_AUDIENCE"] ?? throw new Exception("JWT_AUDIENCE not set");
+if (builder.Environment.IsDevelopment())
+{
+    secretKey ??= "dev-dev-dev-dev-dev-dev-dev-dev-dev-dev-32chars";
+    issuer ??= "adminpanel";
+    audience ??= "frontadminpanel";
+}
+
+if (string.IsNullOrWhiteSpace(secretKey)) throw new Exception("JWT_SECRET_KEY not set");
+if (string.IsNullOrWhiteSpace(issuer)) throw new Exception("JWT_ISSUER not set");
+if (string.IsNullOrWhiteSpace(audience)) throw new Exception("JWT_AUDIENCE not set");
 int.TryParse(builder.Configuration["JWT_EXPIRES_IN_MINUTES"], out var expiration);
 
 var jwtSettings = new JwtSettings
@@ -120,6 +132,15 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter();
+    });
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -129,9 +150,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-
 var app = builder.Build();
 
+var migrateOnStartup = app.Environment.IsDevelopment() ||
+                       builder.Configuration.GetValue<bool>("MIGRATE_ON_STARTUP");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -142,23 +164,34 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<Admin>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var env = services.GetRequiredService<IHostEnvironment>();
-        
-        dbContext.Database.Migrate();
+
+        if (migrateOnStartup)
+        {
+            dbContext.Database.Migrate();
+            Log.Information("Database migrations applied on startup.");
+        }
+        else
+        {
+            Log.Information("Skipping database migrations on startup. Set MIGRATE_ON_STARTUP=true to enable.");
+        }
+
         var seeded = await SeedAdmin.SeedAdminAsync(userManager, roleManager, builder.Configuration, env);
-        Log.Information("Migration check finished. Database: {DbName}. Admin seeded: {AdminStatus}",
+        Log.Information("Admin seed finished. Database: {DbName}. Admin seeded: {AdminStatus}",
             dbContext.Database.GetDbConnection().Database, seeded);
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Migration error");
+        Log.Error(ex, "Startup DB initialization error");
         throw;
     }
 }
 
-
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseCors("AllowFrontend");
@@ -167,6 +200,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 try
 {

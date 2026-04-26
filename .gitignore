@@ -1,5 +1,53 @@
-bin/
-obj/
-/packages/
+# Build output
+**/bin/
+**/obj/
+
+# NuGet
+**/packages/
+*.nupkg
+*.snupkg
+project.assets.json
+
+# User-specific files / IDEs
+.idea/
+*.sln.DotSettings.user
+*.DotSettings.user
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
 riderModule.iml
-/_ReSharper.Caches/
+_ReSharper.Caches/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets*.yaml
+secrets*.yml
+
+# Logs / diagnostics
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# Test results / coverage
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+**/coverage.*/
+
+# ASP.NET / tooling
+appsettings.*.Local.json
+*.http
+*.rest

@@ -135,7 +135,17 @@ All routes are prefixed with `/api`.
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL
+- Docker (recommended)
+
+### Quick Start (Recruiter Friendly)
+
+Run with Docker Compose (app + db + seq):
+
+```bash
+docker compose up -d --build
+```
+
+The backend listens on `http://localhost:5101` and Swagger UI is available at `/swagger` in Development mode.
 
 ### Environment Variables
 
@@ -165,12 +175,6 @@ dotnet run
 ```
 
 Swagger UI is available at `/swagger` in Development mode.
-
-### Run with Docker Compose
-
-```bash
-docker compose up --build
-```
 
 ---
 

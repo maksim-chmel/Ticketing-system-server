@@ -1,4 +1,5 @@
 using AdminPanelBack.DTO;
+using AdminPanelBack.Exceptions;
 using AdminPanelBack.Services.Feedback;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,14 @@ public class FeedbackController(IFeedbackService feedbackService,
     : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<FeedbackDto>>> GetAll()
+    public async Task<ActionResult<List<FeedbackDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 50 : pageSize;
+        pageSize = pageSize > 200 ? 200 : pageSize;
+
         logger.LogInformation("Fetching all feedbacks");
-        var feedbacks = await feedbackService.GetAllFeedbacksAsync();
+        var feedbacks = await feedbackService.GetAllFeedbacksAsync(page, pageSize);
         logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
         return Ok(feedbacks);
     }
@@ -25,7 +30,7 @@ public class FeedbackController(IFeedbackService feedbackService,
     {
         var updated = await feedbackService.UpdateStatus(id, request.Status);
         if (!updated)
-            return NotFound();
+            throw new NotFoundException($"Feedback with id={id} not found");
 
         return NoContent();
     }

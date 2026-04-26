@@ -1,5 +1,6 @@
 using AdminPanelBack.Models;
 using AdminPanelBack.Services.Login;
+using AdminPanelBack.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
@@ -34,7 +35,7 @@ public class AuthController(ILogger<AuthController> logger,ILoginService loginSe
     {
         var refreshToken = Request.Cookies[RefreshTokenCookie];
         if (string.IsNullOrEmpty(refreshToken))
-            return Unauthorized("Refresh token not found");
+            throw new UnauthorizedException("Refresh token not found");
         var (accessToken, newRefreshToken, _) = 
                 await loginService.RefreshTokensAsync(refreshToken);
             Response.Cookies.Append(RefreshTokenCookie, newRefreshToken, RefreshCookieOptions());

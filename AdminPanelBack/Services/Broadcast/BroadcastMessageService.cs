@@ -1,9 +1,10 @@
+using AdminPanelBack.DB;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 
 namespace AdminPanelBack.Services.Broadcast;
 
-public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger) : IBroadcastMessageService
+public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger, AppDbContext context) : IBroadcastMessageService
 {
     public async Task CreateBroadcastMessage(string message)
     {
@@ -12,9 +13,9 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
             Message = message,
             Created = DateTime.UtcNow,
             IsActive = true
-
         };
-       await repository.CreateBroadcastMessage(newBroadcastMessage);
+       repository.AddBroadcastMessage(newBroadcastMessage);
+       await context.SaveChangesAsync();
        logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
     }
 
@@ -24,11 +25,13 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
         foreach (var msg  in list)
         {
             msg.IsActive = false;
+            repository.UpdateBroadcastMessage(msg);
         }
-        await repository.UpdateBroadcastMessages(list);
+        if (list.Count > 0)
+        {
+            await context.SaveChangesAsync();
+        }
         logger.LogInformation("Deactivated {Count} broadcast messages", list.Count);
         return list;
-       
     }
-    
 }

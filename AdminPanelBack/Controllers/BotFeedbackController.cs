@@ -1,4 +1,5 @@
 using AdminPanelBack.DTO;
+using AdminPanelBack.Exceptions;
 using AdminPanelBack.Services.Broadcast;
 using AdminPanelBack.Services.Feedback;
 using AdminPanelBack.Services.User;
@@ -31,19 +32,21 @@ public class BotFeedbackController(
     public async Task<ActionResult<UserDto>> GetUser(long userId)
     {
         var user = await userService.GetUserById(userId);
-        return user == null ? NotFound() : Ok(user);
+        if (user == null)
+            throw new NotFoundException($"User with id={userId} not found");
+        return Ok(user);
     }
 
     [HttpPut("users/{userId:long}")]
     public async Task<IActionResult> UpsertUser(long userId, [FromBody] UserDto userDto)
     {
         if (userDto.UserId != 0 && userDto.UserId != userId)
-            return ValidationProblem("userId in body must match route userId");
+            throw new ValidationException("userId in body must match route userId");
 
         userDto.UserId = userId;
         var result = await userService.RegistrationNewUser(userDto);
         if (!result)
-            return Problem("Registration failed", statusCode: StatusCodes.Status400BadRequest);
+            throw new ValidationException("Registration failed");
 
         return NoContent();
     }

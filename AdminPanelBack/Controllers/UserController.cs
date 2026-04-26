@@ -1,4 +1,5 @@
 using AdminPanelBack.DTO;
+using AdminPanelBack.Exceptions;
 using AdminPanelBack.Services.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,14 @@ public class UserController(IUserService service,
     ILogger<UserController> logger) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize < 1 ? 50 : pageSize;
+        pageSize = pageSize > 200 ? 200 : pageSize;
+
         logger.LogInformation("Fetching user list");
-        var result = await service.GetAllUsers();
+        var result = await service.GetAllUsers(page, pageSize);
         logger.LogInformation("Retrieved {Count} users", result.Count);
         return Ok(result);
     }
@@ -23,7 +28,9 @@ public class UserController(IUserService service,
     public async Task<ActionResult<UserDto>> GetById(long userId)
     {
         var user = await service.GetUserById(userId);
-        return user == null ? NotFound() : Ok(user);
+        if (user == null)
+            throw new NotFoundException($"User with id={userId} not found");
+        return Ok(user);
     }
 
     [HttpPatch("{userId:long}/comment")]

@@ -7,11 +7,21 @@ public class StatisticsService(IStatisticsRepository repository):IStatisticsServ
 {
     public async Task<List<StatusDistributionDto>> GetStatusDistributionAsync()
     {
-        return await repository.GetStatusDistributionAsync();
+        var list = await repository.GetStatusDistributionAsync();
+        return list.Select(x => new StatusDistributionDto
+        {
+            Name = x.Status.ToString(),
+            Value = x.Count
+        }).ToList();
     }
     
     public async Task<List<TimeDisrtibutionDto>> GetRequestsOverTimeAsync()
     {
-       return await repository.GetRequestsOverTimeAsync();
+        var list = await repository.GetRequestsOverTimeAsync();
+        return list.Select(x => new TimeDisrtibutionDto
+        {
+            Date = x.Date.ToString("yyyy-MM-dd"),
+            Value = x.Count
+        }).ToList();
     }
 }

@@ -45,14 +45,14 @@ public class AuthServiceTests
     public async Task CheckPasswordOrThrow_WhenAdminIsNull_ThrowsArgumentNullException()
     {
        
-        await _service.Invoking(s =>s.CheckPasswordOrThrow(null,"password")).Should().ThrowAsync<ArgumentNullException>();
+        await _service.Invoking(s =>s.CheckPasswordOrThrow(null!,"password")).Should().ThrowAsync<ArgumentNullException>();
       
     }
 
     [Fact]
     public async Task CheckPasswordOrThrow_WhenPasswordIsEmpty_ThrowsValidationException()
     {
-        await _service.Invoking(s=>s.CheckPasswordOrThrow(new Admin(),null)).Should().ThrowAsync<ValidationException>();
+        await _service.Invoking(s=>s.CheckPasswordOrThrow(new Admin(),null!)).Should().ThrowAsync<ValidationException>();
     }
 
     [Fact]

@@ -4,7 +4,7 @@ namespace AdminPanelBack.Repository;
 
 public interface IBroadcastMessageRepository: IRepository<BroadcastMessage>
 {
-    public Task CreateBroadcastMessage(BroadcastMessage message);
+    void AddBroadcastMessage(BroadcastMessage message);
     Task<List<BroadcastMessage>> GetActiveBroadcastMessagesToList();
-    Task UpdateBroadcastMessages(List<BroadcastMessage> broadcastMessages);
+    void UpdateBroadcastMessage(BroadcastMessage broadcastMessage);
 }

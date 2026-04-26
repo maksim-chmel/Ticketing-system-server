@@ -1,14 +1,17 @@
+using AdminPanelBack.DB;
 using AdminPanelBack.DTO;
+using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 using AutoMapper;
 
 namespace AdminPanelBack.Services.Feedback;
 
-public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogger<FeedbackService> logger): IFeedbackService
+public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogger<FeedbackService> logger, AppDbContext context): IFeedbackService
 {
-    public async Task<List<FeedbackDto>> GetAllFeedbacksAsync()
+    public async Task<List<FeedbackDto>> GetAllFeedbacksAsync(int page, int pageSize)
     {
-        var feedbacks =await repository.GetAllFeedbacksAsync();
+        var skip = (page - 1) * pageSize;
+        var feedbacks = await repository.GetFeedbacksPageAsync(skip, pageSize);
 
         return mapper.Map<List<FeedbackDto>>(feedbacks);
     }
@@ -27,7 +30,7 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogg
             return false;
         }
         feedback.Status = status;
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
         logger.LogInformation($"Feedback updated: {feedback.Id}");
         return true;
 
@@ -37,28 +40,15 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogg
     { 
         var feedback = mapper.Map<Models.Feedback>(dto);
         await repository.AddFeedbackAsync(feedback);
+        await context.SaveChangesAsync();
         logger.LogInformation($"Feedback created: {feedback.Id}");
         
     }
 
     public async Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync()
     {
-        var allFeedbacks = await repository.GetAllFeedbacksAsync();
-        
-        var newFeedbacks = allFeedbacks.Where(f => !f.IsSentToOperator).ToList();
-
-        if (newFeedbacks.Count == 0)
-        {
-            logger.LogInformation("No new feedbacks found for operator");
-            return new List<FeedbackDto>();
-        }
-        
-        foreach (var feedback in newFeedbacks)
-        {
-            feedback.IsSentToOperator = true;
-        }
-        await repository.UpdateFeedbackAsync(newFeedbacks);
-        logger.LogInformation("Successfully sent {Count} feedbacks to operator",newFeedbacks.Count);
+        var newFeedbacks = await repository.PullUnsentToOperatorAsync(take: 100);
+        logger.LogInformation("Successfully sent {Count} feedbacks to operator", newFeedbacks.Count);
         return mapper.Map<List<FeedbackDto>>(newFeedbacks);
     }
 

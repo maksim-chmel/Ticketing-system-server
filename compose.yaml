@@ -13,14 +13,15 @@
       seq:
         condition: service_started
     environment:
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ISSUER=${JWT_ISSUER}
-      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-dev-dev-dev-dev-dev-dev-dev-dev-dev-32chars}
+      - JWT_ISSUER=${JWT_ISSUER:-adminpanel}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-frontadminpanel}
+      - JWT_EXPIRES_IN_MINUTES=${JWT_EXPIRES_IN_MINUTES:-60}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD}
-      - SEQ_URL=http://seq:5341
-    env_file:
-      - .env
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD:-postgres}
+      - SEQ_URL=${SEQ_URL:-http://seq:5341}
+      - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
     networks:
       - feedback_net
   
@@ -31,7 +32,7 @@
     environment:
       - POSTGRES_DB=feedbackdb
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
     ports:
       - "5433:5432"
     volumes:

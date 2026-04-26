@@ -1,4 +1,4 @@
-namespace AdminPanelBack.Services.Feedback;
+namespace AdminPanelBack.Models;
 
 public enum FeedbackStatus
 {
@@ -8,3 +8,4 @@ public enum FeedbackStatus
     Done = 3,
     Rejected = 4
 }
+

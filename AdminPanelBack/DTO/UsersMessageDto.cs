@@ -1,4 +1,4 @@
-using AdminPanelBack.Services.Feedback;
+using AdminPanelBack.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace AdminPanelBack.DTO;

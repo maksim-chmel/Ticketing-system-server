@@ -21,7 +21,4 @@ public class Repository<T>(AppDbContext context) : IRepository<T>
 
     public virtual void Remove(T entity) =>
         context.Set<T>().Remove(entity);
-
-    public virtual async Task SaveChangesAsync() =>
-        await context.SaveChangesAsync();
 }

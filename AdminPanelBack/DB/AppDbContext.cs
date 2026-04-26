@@ -26,5 +26,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             .WithMany(u => u.Feedbacks)
             .HasForeignKey(f => f.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(t => t.TokenHash)
+            .IsUnique()
+            // Allow old rows that haven't been backfilled yet during rollout.
+            .HasFilter("\"TokenHash\" <> ''");
     }
 }
