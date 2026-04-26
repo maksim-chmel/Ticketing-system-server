@@ -1,4 +1,4 @@
-# Ticketing System — Admin Panel Backend
+# Ticketing System — Admin Panel Backend [![Cloud CI (GitHub-hosted)](https://github.com/maksim-chmel/Ticketing-system-server/actions/workflows/ci-cloud.yml/badge.svg)](https://github.com/maksim-chmel/Ticketing-system-server/actions/workflows/ci-cloud.yml)
 
 REST API backend for a support ticket management system. Part of a four-component platform — see [System Overview](#system-overview) below.
 
