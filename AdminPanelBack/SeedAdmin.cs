@@ -1,5 +1,8 @@
 using AdminPanelBack.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace AdminPanelBack;
 
@@ -29,7 +32,11 @@ public static class SeedAdmin
             if (env.IsDevelopment())
             {
                 adminEmail ??= "admin@example.com";
-                adminPassword ??= "Admin@123";
+                if (string.IsNullOrWhiteSpace(adminPassword))
+                {
+                    Log.Warning("ADMIN_PASSWORD not set for development environment, skipping admin seeding.");
+                    return false;
+                }
             }
             else
             {

@@ -83,13 +83,6 @@ var secretKey = builder.Configuration["JWT_SECRET_KEY"];
 var issuer = builder.Configuration["JWT_ISSUER"];
 var audience = builder.Configuration["JWT_AUDIENCE"];
 
-if (builder.Environment.IsDevelopment())
-{
-    secretKey ??= "dev-dev-dev-dev-dev-dev-dev-dev-dev-dev-32chars";
-    issuer ??= "adminpanel";
-    audience ??= "frontadminpanel";
-}
-
 if (string.IsNullOrWhiteSpace(secretKey)) throw new Exception("JWT_SECRET_KEY not set");
 if (string.IsNullOrWhiteSpace(issuer)) throw new Exception("JWT_ISSUER not set");
 if (string.IsNullOrWhiteSpace(audience)) throw new Exception("JWT_AUDIENCE not set");
