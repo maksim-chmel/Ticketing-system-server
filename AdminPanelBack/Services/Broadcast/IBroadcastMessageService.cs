@@ -4,6 +4,6 @@ namespace AdminPanelBack.Services.Broadcast;
 
 public interface IBroadcastMessageService
 {
-    Task CreateBroadcastMessage(string message);
-    Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive();
+    Task CreateBroadcastMessage(string message, CancellationToken cancellationToken = default);
+    Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive(CancellationToken cancellationToken = default);
 }

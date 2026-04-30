@@ -9,17 +9,17 @@ public class UserRepository(AppDbContext context) : Repository<User>(context)
 {
     private readonly AppDbContext _context = context;
 
-    public Task<List<long>> GetAllUserIdsAsync() =>
+    public Task<List<long>> GetAllUserIdsAsync(CancellationToken cancellationToken = default) =>
         _context.Clients
             .AsNoTracking()
             .Select(u => u.UserId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-    public Task<List<User>> GetUsersPageAsync(int skip, int take) =>
+    public Task<List<User>> GetUsersPageAsync(int skip, int take, CancellationToken cancellationToken = default) =>
         _context.Clients
             .AsNoTracking()
             .OrderBy(u => u.UserId)
             .Skip(skip)
             .Take(take)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 }

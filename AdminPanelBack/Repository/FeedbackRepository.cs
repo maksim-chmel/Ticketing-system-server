@@ -9,28 +9,28 @@ public class FeedbackRepository(AppDbContext dbContext)
 {
     private readonly AppDbContext _dbContext = dbContext;
 
-    public Task<List<Feedback>> GetFeedbacksPageAsync(int skip, int take) =>
+    public Task<List<Feedback>> GetFeedbacksPageAsync(int skip, int take, CancellationToken cancellationToken = default) =>
         _dbContext.Feedbacks
             .AsNoTracking()
             .Include(f => f.User)
             .OrderByDescending(f => f.CreatedDate)
             .Skip(skip)
             .Take(take)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-    public async Task<List<Feedback>> GetUserFeedbacksAsync(long userId)
+    public async Task<List<Feedback>> GetUserFeedbacksAsync(long userId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Feedbacks
             .AsNoTracking()
             .Include(f => f.User)
             .Where(f => f.UserId == userId) 
             .OrderByDescending(f => f.CreatedDate) 
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task AddFeedbackAsync(Feedback feedback)
+    public async Task AddFeedbackAsync(Feedback feedback, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Feedbacks.AddAsync(feedback);
+        await _dbContext.Feedbacks.AddAsync(feedback, cancellationToken);
     }
 
     public void UpdateFeedback(Feedback feedback)
@@ -38,29 +38,43 @@ public class FeedbackRepository(AppDbContext dbContext)
         _dbContext.Feedbacks.Update(feedback);
     }
 
-    public async Task<List<Feedback>> PullUnsentToOperatorAsync(int take)
+    public async Task<List<Feedback>> PullUnsentToOperatorAsync(int take, CancellationToken cancellationToken = default)
     {
-        // Используем атомарное обновление для предотвращения состояния гонки.
-        // Обновляем IsSentToOperator для 'take' записей, которые еще не были отправлены.
-        var updatedCount = await _dbContext.Feedbacks
-            .Where(f => !f.IsSentToOperator)
-            .OrderBy(f => f.CreatedDate)
-            .Take(take)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(f => f.IsSentToOperator, true));
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            // Сначала выбираем конкретные ID, которые будем обрабатывать.
+            var ids = await _dbContext.Feedbacks
+                .Where(f => !f.IsSentToOperator)
+                .OrderBy(f => f.CreatedDate)
+                .Take(take)
+                .Select(f => f.Id)
+                .ToListAsync(cancellationToken);
 
-        if (updatedCount == 0)
-            return new List<Feedback>();
+            if (ids.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return new List<Feedback>();
+            }
 
-        // Теперь получаем обновленные записи. Можно было бы возвращать только ID,
-        // но для полной совместимости с предыдущим API, мы получаем полные объекты.
-        var list = await _dbContext.Feedbacks
-            .Include(f => f.User)
-            .Where(f => f.IsSentToOperator && f.CreatedDate >= DateTime.UtcNow.AddDays(-1))
-            .OrderByDescending(f => f.CreatedDate)
-            .Take(take)
-            .ToListAsync();
+            // Обновляем только те записи, которые выбрали выше — без гонки данных.
+            await _dbContext.Feedbacks
+                .Where(f => ids.Contains(f.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(f => f.IsSentToOperator, true), cancellationToken);
 
-        return list;
+            // Загружаем именно эти записи (без фильтра по дате — он был некорректен).
+            var list = await _dbContext.Feedbacks
+                .Include(f => f.User)
+                .Where(f => ids.Contains(f.Id))
+                .ToListAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+            return list;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 }

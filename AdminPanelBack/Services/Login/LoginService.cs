@@ -9,22 +9,22 @@ namespace AdminPanelBack.Services.Login;
 public class LoginService(UserManager<Admin> userManager, ITokenService tokenService,
     IRefreshTokenService refreshTokenService, ILogger<LoginService> logger, IAuthService authService) : ILoginService
 {
-    public async Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password)
+    public async Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Authentication attempt for user {Username}", username);
         var user = await authService.FindAdminByUsernameOrThrow(username);
         await authService.CheckPasswordOrThrow(user, password);
-        await refreshTokenService.RevokeAllUserTokensAsync(user.Id);
-        var (accessToken, refreshToken) = await GenerateTokensAsync(user);
+        await refreshTokenService.RevokeAllUserTokensAsync(user.Id, cancellationToken);
+        var (accessToken, refreshToken) = await GenerateTokensAsync(user, cancellationToken);
         logger.LogInformation("User {Username} authenticated successfully", username);
         return (accessToken, refreshToken);
     }
 
-    public async Task<(string accessToken, string refreshToken, string userName)> RefreshTokensAsync(string currentRefreshToken)
+    public async Task<(string accessToken, string refreshToken, string userName)> RefreshTokensAsync(string currentRefreshToken, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Attempting to refresh tokens");
 
-        var token = await refreshTokenService.GetRefreshToken(currentRefreshToken);
+        var token = await refreshTokenService.GetRefreshToken(currentRefreshToken, cancellationToken);
         if (token == null)
         {
             logger.LogWarning("Invalid refresh token provided");
@@ -38,18 +38,19 @@ public class LoginService(UserManager<Admin> userManager, ITokenService tokenSer
             throw new UnauthorizedException("User not found");
         }
 
-        await refreshTokenService.RevokeRefreshTokenAsync(currentRefreshToken);
-        var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user);
+        await refreshTokenService.RevokeRefreshTokenAsync(currentRefreshToken, cancellationToken);
+        var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user, cancellationToken);
         logger.LogInformation("Tokens successfully refreshed for user {Username}", user.UserName);
 
         return (newAccessToken, newRefreshToken, user.UserName!);
     }
 
-    private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user)
+    private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user, CancellationToken cancellationToken = default)
     {
-        var accessToken = tokenService.GenerateToken(user.Id, user.UserName!);
-        var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id);
-        logger.LogInformation("Tokens successfully issued for admin {Username} (Id: {UserId})",user.UserName, user.Id);
+        var roles = await userManager.GetRolesAsync(user);
+        var accessToken = tokenService.GenerateToken(user.Id, user.UserName!, roles);
+        var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id, cancellationToken);
+        logger.LogInformation("Tokens successfully issued for admin {Username} (Id: {UserId})", user.UserName, user.Id);
         return (accessToken, refreshToken);
     }
 }

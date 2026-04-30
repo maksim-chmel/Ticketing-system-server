@@ -4,6 +4,6 @@ namespace AdminPanelBack.Repository;
 
 public interface IStatisticsRepository
 {
-    Task<List<StatusDistributionItem>> GetStatusDistributionAsync();
-    Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsync();
+    Task<List<StatusDistributionItem>> GetStatusDistributionAsync(CancellationToken cancellationToken = default);
+    Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default);
 }

@@ -14,6 +14,6 @@ public class FeedbackProfile : Profile
             .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.CreatedDate));;
         CreateMap<UsersMessageDto, Feedback>()
             .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => 0));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => FeedbackStatus.Open));
     }
 }

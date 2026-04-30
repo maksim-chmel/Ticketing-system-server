@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
-[Authorize]
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/feedbacks")]
 public class FeedbackController(IFeedbackService feedbackService,
@@ -13,22 +13,29 @@ public class FeedbackController(IFeedbackService feedbackService,
     : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<FeedbackDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<List<FeedbackDto>>> GetAll(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default) 
     {
-        page = page < 1 ? 1 : page;
-        pageSize = pageSize < 1 ? 50 : pageSize;
-        pageSize = pageSize > 200 ? 200 : pageSize;
+        
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
 
-        logger.LogInformation("Fetching all feedbacks");
-        var feedbacks = await feedbackService.GetAllFeedbacksAsync(page, pageSize);
+        logger.LogInformation("Fetching feedbacks. Page: {Page}, Size: {Size}", page, pageSize);
+
+      
+        var feedbacks = await feedbackService.GetAllFeedbacksAsync(page, pageSize, cancellationToken);
+
         logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
+    
         return Ok(feedbacks);
     }
 
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request)
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request,CancellationToken cancellationToken)
     {
-        var updated = await feedbackService.UpdateStatus(id, request.Status);
+        var updated = await feedbackService.UpdateStatus(id, request.Status,cancellationToken);
         if (!updated)
             throw new NotFoundException($"Feedback with id={id} not found");
 

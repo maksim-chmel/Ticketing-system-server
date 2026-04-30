@@ -14,9 +14,9 @@ public sealed class BroadcastMessageRepository(AppDbContext dbContext)
         _dbContext.BroadcastMessages.Add(message);
     }
 
-    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesToList()
+    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesToList(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.BroadcastMessages.Where(b => b.IsActive).ToListAsync();
+        return await _dbContext.BroadcastMessages.Where(b => b.IsActive).ToListAsync(cancellationToken);
     }
 
     public void UpdateBroadcastMessage(BroadcastMessage broadcastMessage)

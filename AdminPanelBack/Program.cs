@@ -13,6 +13,8 @@ using AdminPanelBack.Services.Statistic;
 using AdminPanelBack.Services.Token;
 using AdminPanelBack.Services.User;
 using DotNetEnv;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,25 +22,25 @@ using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Metrics;
 using Serilog;
 
-Env.Load();
+Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddScoped<ApiKeyAuthFilter>();
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DefaultConnection"];
 
-if (string.IsNullOrWhiteSpace(connectionString) && builder.Environment.IsDevelopment())
-{
-    connectionString = "Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=postgres";
-}
-
 if (string.IsNullOrWhiteSpace(connectionString))
-    throw new Exception("DefaultConnection not set");
+{
+    throw new Exception("Connection string 'DefaultConnection' is not set in environment variables or configuration.");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));

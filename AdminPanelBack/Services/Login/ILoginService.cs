@@ -1,9 +1,9 @@
 namespace AdminPanelBack.Services.Login;
 
 public interface ILoginService
-{ 
-    public Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password);
+{
+    Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default);
 
-    public Task<(string accessToken, string refreshToken, string userName)> RefreshTokensAsync(
-        string currentRefreshToken);
+    Task<(string accessToken, string refreshToken, string userName)> RefreshTokensAsync(
+        string currentRefreshToken, CancellationToken cancellationToken = default);
 }

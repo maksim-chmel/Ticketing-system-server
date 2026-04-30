@@ -4,9 +4,9 @@ namespace AdminPanelBack.Services.Token;
 
 public interface IRefreshTokenService
 {
-    public Task RevokeAllUserTokensAsync(string userId);
-    Task<string> CreateRefreshTokenAsync(string userId);
-    Task<bool> ValidateRefreshTokenAsync(string token, string userId);
-    Task RevokeRefreshTokenAsync(string token);
-    public Task<RefreshToken?> GetRefreshToken(string refreshToken);
+    Task RevokeAllUserTokensAsync(string userId, CancellationToken cancellationToken = default);
+    Task<string> CreateRefreshTokenAsync(string userId, CancellationToken cancellationToken = default);
+    Task<bool> ValidateRefreshTokenAsync(string token, string userId, CancellationToken cancellationToken = default);
+    Task RevokeRefreshTokenAsync(string token, CancellationToken cancellationToken = default);
+    Task<RefreshToken?> GetRefreshToken(string refreshToken, CancellationToken cancellationToken = default);
 }

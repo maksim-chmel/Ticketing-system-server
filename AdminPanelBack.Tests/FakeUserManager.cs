@@ -25,9 +25,13 @@ public class FakeUserManager : UserManager<Admin>
         => Task.FromResult(PasswordResult);
 
     public bool PasswordResult { get; set; } = true;
+
     public override Task<Admin?> FindByIdAsync(string userId)
         => Task.FromResult(UserToReturn);
 
     public override Task<Admin?> FindByNameAsync(string userName)
         => Task.FromResult(UserToReturn);
+
+    public override Task<IList<string>> GetRolesAsync(Admin user)
+        => Task.FromResult<IList<string>>(new List<string>());
 }

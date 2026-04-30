@@ -15,7 +15,7 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         return Convert.ToBase64String(hashBytes);
     }
 
-    public async Task<string> CreateRefreshTokenAsync(string userId)
+    public async Task<string> CreateRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
     {
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)); // raw token for client
         var tokenHash = HashToken(token);
@@ -32,13 +32,13 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         };
 
         db.RefreshTokens.Add(refreshToken);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Refresh token created for user {UserId}", userId);
         return token;
     }
 
-    public async Task<bool> ValidateRefreshTokenAsync(string token, string userId)
+    public async Task<bool> ValidateRefreshTokenAsync(string token, string userId, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Validating refresh token for user {UserId}", userId);
 
@@ -47,7 +47,7 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
             r.TokenHash == tokenHash &&
             r.UserId == userId &&
             !r.IsRevoked &&
-            r.ExpiresAt > DateTime.UtcNow);
+            r.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
         if (found == null)
         {
@@ -56,13 +56,13 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
                 r.Token == token &&
                 r.UserId == userId &&
                 !r.IsRevoked &&
-                r.ExpiresAt > DateTime.UtcNow);
+                r.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
             if (found != null && string.IsNullOrEmpty(found.TokenHash))
             {
                 found.TokenHash = tokenHash;
                 found.Token = string.Empty;
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -71,15 +71,15 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         return isValid;
     }
 
-    public async Task RevokeRefreshTokenAsync(string token)
+    public async Task RevokeRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Attempting to revoke refresh token");
 
         var tokenHash = HashToken(token);
-        var existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash);
+        var existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash, cancellationToken);
         if (existing == null)
         {
-            existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.Token == token);
+            existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.Token == token, cancellationToken);
             if (existing != null && string.IsNullOrEmpty(existing.TokenHash))
             {
                 existing.TokenHash = tokenHash;
@@ -89,7 +89,7 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         if (existing != null)
         {
             existing.IsRevoked = true;
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Refresh token successfully revoked");
         }
         else
@@ -98,24 +98,24 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         }
     }
 
-    public async Task RevokeAllUserTokensAsync(string userId)
+    public async Task RevokeAllUserTokensAsync(string userId, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Revoking all active tokens for user {UserId}", userId);
 
         var tokens = await db.RefreshTokens
             .Where(t => t.UserId == userId && !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (var token in tokens)
         {
             token.IsRevoked = true;
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Revoked {Count} tokens for user {UserId}", tokens.Count, userId);
     }
 
-    public async Task<RefreshToken?> GetRefreshToken(string refreshToken)
+    public async Task<RefreshToken?> GetRefreshToken(string refreshToken, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Fetching refresh token");
 
@@ -123,20 +123,20 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
         var token = await db.RefreshTokens.FirstOrDefaultAsync(t =>
             t.TokenHash == tokenHash &&
             !t.IsRevoked &&
-            t.ExpiresAt > DateTime.UtcNow);
+            t.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
         if (token == null)
         {
             token = await db.RefreshTokens.FirstOrDefaultAsync(t =>
                 t.Token == refreshToken &&
                 !t.IsRevoked &&
-                t.ExpiresAt > DateTime.UtcNow);
+                t.ExpiresAt > DateTime.UtcNow, cancellationToken);
 
             if (token != null && string.IsNullOrEmpty(token.TokenHash))
             {
                 token.TokenHash = tokenHash;
                 token.Token = string.Empty;
-                await db.SaveChangesAsync();
+                await db.SaveChangesAsync(cancellationToken);
             }
         }
 

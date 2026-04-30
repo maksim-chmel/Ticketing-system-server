@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelBack.Controllers;
-[Authorize]
+[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/broadcast-messages")]
 public class BroadcastController(IBroadcastMessageService service) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateBroadcastMessageRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateBroadcastMessageRequest request, CancellationToken cancellationToken)
     {
-        await service.CreateBroadcastMessage(request.Message);
+        await service.CreateBroadcastMessage(request.Message, cancellationToken);
         return NoContent();
     }
 }

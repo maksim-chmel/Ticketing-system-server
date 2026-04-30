@@ -6,7 +6,7 @@ namespace AdminPanelBack.Services.Broadcast;
 
 public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger, AppDbContext context) : IBroadcastMessageService
 {
-    public async Task CreateBroadcastMessage(string message)
+    public async Task CreateBroadcastMessage(string message, CancellationToken cancellationToken = default)
     {
         var newBroadcastMessage = new BroadcastMessage
         {
@@ -15,13 +15,13 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
             IsActive = true
         };
        repository.AddBroadcastMessage(newBroadcastMessage);
-       await context.SaveChangesAsync();
+       await context.SaveChangesAsync(cancellationToken);
        logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
     }
 
-    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive()
+    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive(CancellationToken cancellationToken = default)
     {
-        var list = await repository.GetActiveBroadcastMessagesToList();
+        var list = await repository.GetActiveBroadcastMessagesToList(cancellationToken);
         foreach (var msg  in list)
         {
             msg.IsActive = false;
@@ -29,7 +29,7 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
         }
         if (list.Count > 0)
         {
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
         logger.LogInformation("Deactivated {Count} broadcast messages", list.Count);
         return list;

@@ -51,12 +51,11 @@ public class FeedbackServiceTests
             new() { Id = 1, UserId = 100, Comment = "Great service", Status = FeedbackStatus.Open },
             new() { Id = 2, UserId = 200, Comment = "Issue with login", Status = FeedbackStatus.InProgress }
         };
-        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(feedbacks);
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedbacks);
 
-       
         var result = await _service.GetAllFeedbacksAsync(1, 50);
 
-        
         result.Should().HaveCount(2);
         result[0].Id.Should().Be(1);
         result[1].Comment.Should().Be("Issue with login");
@@ -65,27 +64,23 @@ public class FeedbackServiceTests
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenNoFeedbacks_ReturnsEmptyList()
     {
-        
-        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>());
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Feedback>());
 
-        
         var result = await _service.GetAllFeedbacksAsync(1, 50);
 
-       
         result.Should().BeEmpty();
     }
 
     [Fact]
     public async Task UpdateStatus_WhenFeedbackExists_UpdatesStatusAndSaves()
     {
-        
         var feedback = new Feedback { Id = 1, Status = FeedbackStatus.Open };
-        _mockRepo.Setup(r => r.FindAsyncById(1)).ReturnsAsync(feedback);
+        _mockRepo.Setup(r => r.FindAsyncById(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedback);
 
-       
         await _service.UpdateStatus(1, FeedbackStatus.Done);
 
-        
         feedback.Status.Should().Be(FeedbackStatus.Done);
         _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -93,32 +88,39 @@ public class FeedbackServiceTests
     [Fact]
     public async Task UpdateStatus_WhenFeedbackNotFound_DoesNotSave()
     {
-        
-        _mockRepo.Setup(r => r.FindAsyncById(99)).ReturnsAsync((Feedback?)null);
+        _mockRepo.Setup(r => r.FindAsyncById(99, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Feedback?)null);
 
-        
         await _service.UpdateStatus(99, FeedbackStatus.Done);
 
-        
         _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenOneFeedbackExists_ReturnsIt()
     {
-        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>{new (){Id = 5}});
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Feedback> { new() { Id = 5 } });
+
         var result = await _service.GetAllFeedbacksAsync(1, 50);
+
         result.Should().HaveCount(1);
         result[0].Id.Should().Be(5);
     }
+
     [Fact]
     public async Task GetAllFeedbacksAsync_WhenFeedbacksHaveDifferentStatus_ReturnsIt()
     {
-        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50)).ReturnsAsync(new List<Feedback>{new (){Status =  FeedbackStatus.Open},
-            new(){Status =  FeedbackStatus.InProgress } } );
+        _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Feedback>
+            {
+                new() { Status = FeedbackStatus.Open },
+                new() { Status = FeedbackStatus.InProgress }
+            });
+
         var result = await _service.GetAllFeedbacksAsync(1, 50);
+
         result.Should().HaveCount(2);
-        
         result[0].Status.Should().Be(FeedbackStatus.Open);
         result[1].Status.Should().Be(FeedbackStatus.InProgress);
     }
@@ -129,14 +131,12 @@ public class FeedbackServiceTests
     [InlineData(FeedbackStatus.Rejected)]
     public async Task UpdateStatus_ToAnyStatus_SavesCorrectly(FeedbackStatus newStatus)
     {
-        
         var feedback = new Feedback { Id = 1, Status = FeedbackStatus.Open };
-        _mockRepo.Setup(r => r.FindAsyncById(1)).ReturnsAsync(feedback);
+        _mockRepo.Setup(r => r.FindAsyncById(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(feedback);
 
-        
         await _service.UpdateStatus(1, newStatus);
 
-       
         feedback.Status.Should().Be(newStatus);
         _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -145,11 +145,11 @@ public class FeedbackServiceTests
     public async Task CreateFeedbackAsync_WhenCalled_AddsFeedbackAndSaves()
     {
         var dto = new UsersMessageDto { UserId = 1, Comment = "New feedback" };
-        _mockRepo.Setup(r => r.AddFeedbackAsync(It.IsAny<Feedback>()));
-        
+        _mockRepo.Setup(r => r.AddFeedbackAsync(It.IsAny<Feedback>(), It.IsAny<CancellationToken>()));
+
         await _service.CreateFeedbackAsync(dto);
 
-        _mockRepo.Verify(r => r.AddFeedbackAsync(It.IsAny<Feedback>()), Times.Once);
+        _mockRepo.Verify(r => r.AddFeedbackAsync(It.IsAny<Feedback>(), It.IsAny<CancellationToken>()), Times.Once);
         _mockDbContext.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

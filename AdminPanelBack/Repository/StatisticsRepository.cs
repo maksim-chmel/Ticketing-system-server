@@ -6,7 +6,7 @@ namespace AdminPanelBack.Repository;
 
 public class StatisticsRepository(AppDbContext context) : IStatisticsRepository
 {
-    public async Task<List<StatusDistributionItem>> GetStatusDistributionAsync()
+    public async Task<List<StatusDistributionItem>> GetStatusDistributionAsync(CancellationToken cancellationToken = default)
     {
        return await context.Feedbacks
             .GroupBy(t => t.Status)
@@ -15,14 +15,14 @@ public class StatisticsRepository(AppDbContext context) : IStatisticsRepository
                 Status = g.Key,
                 Count = g.Count()
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
-    public Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsync()
+    public Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default)
     {
-        return GetRequestsOverTimeAsyncImpl();
+        return GetRequestsOverTimeAsyncImpl(cancellationToken);
     }
 
-    private Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsyncImpl()
+    private Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsyncImpl(CancellationToken cancellationToken)
     {
         // Keep aggregation in SQL. Date formatting is done in-memory after the DB aggregation.
         return context.Feedbacks
@@ -33,6 +33,6 @@ public class StatisticsRepository(AppDbContext context) : IStatisticsRepository
                 Date = g.Key,
                 Count = g.Count()
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 }
