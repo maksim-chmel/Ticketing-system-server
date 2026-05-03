@@ -4,7 +4,7 @@ using AdminPanelBack.Repository;
 
 namespace AdminPanelBack.Services.Broadcast;
 
-public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger, AppDbContext context) : IBroadcastMessageService
+public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger, IUnitOfWork unitOfWork) : IBroadcastMessageService
 {
     public async Task CreateBroadcastMessage(string message, CancellationToken cancellationToken = default)
     {
@@ -15,7 +15,7 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
             IsActive = true
         };
        repository.AddBroadcastMessage(newBroadcastMessage);
-       await context.SaveChangesAsync(cancellationToken);
+       await unitOfWork.SaveChangesAsync(cancellationToken);
        logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
     }
 
@@ -29,7 +29,7 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
         }
         if (list.Count > 0)
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         logger.LogInformation("Deactivated {Count} broadcast messages", list.Count);
         return list;

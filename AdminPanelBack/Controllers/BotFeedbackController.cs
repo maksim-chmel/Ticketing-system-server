@@ -44,12 +44,9 @@ public class BotFeedbackController(
     {
         if (userDto.UserId != 0 && userDto.UserId != userId)
             throw new ValidationException("userId in body must match route userId");
-
+        
         userDto.UserId = userId;
-        var result = await userService.RegistrationNewUser(userDto, cancellationToken);
-        if (!result)
-            throw new ValidationException("Registration failed");
-
+        await userService.RegistrationNewUser(userDto, cancellationToken);
         return NoContent();
     }
 

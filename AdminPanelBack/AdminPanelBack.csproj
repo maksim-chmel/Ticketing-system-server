@@ -75,6 +75,12 @@
       <Compile Update="Services\User\UserService.cs">
         <DependentUpon>IUserService.cs</DependentUpon>
       </Compile>
+      <Compile Update="UnitOfWork.cs">
+        <DependentUpon>IUnitOfWork.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\RefreshTokenRepository.cs">
+        <DependentUpon>IRefreshTokenRepository.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
     <ItemGroup>

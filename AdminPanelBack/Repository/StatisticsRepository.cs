@@ -24,7 +24,7 @@ public class StatisticsRepository(AppDbContext context) : IStatisticsRepository
 
     private Task<List<RequestsOverTimeItem>> GetRequestsOverTimeAsyncImpl(CancellationToken cancellationToken)
     {
-        // Keep aggregation in SQL. Date formatting is done in-memory after the DB aggregation.
+        
         return context.Feedbacks
             .GroupBy(t => t.CreatedDate.Date)
             .OrderBy(g => g.Key)

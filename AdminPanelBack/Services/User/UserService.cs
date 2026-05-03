@@ -5,7 +5,7 @@ using AutoMapper;
 
 namespace AdminPanelBack.Services.User;
 
-public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserService> logger, AppDbContext context) : IUserService
+public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
 {
     public async Task<List<UserDto>> GetAllUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -23,11 +23,11 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         var user = await repository.FindAsyncById(userId, cancellationToken);
         if (user == null) return null;
         user.Comments =  comment;
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return user;
     }
 
-    public async Task<bool> RegistrationNewUser(UserDto userDto, CancellationToken cancellationToken = default)
+    public async Task RegistrationNewUser(UserDto userDto, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Starting registration/update for UserID: {UserId}", userDto.UserId);
 
@@ -36,16 +36,17 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         if (user != null) 
         {
             mapper.Map(userDto, user);
-            await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Existing user {UserId} successfully updated", userDto.UserId);
-            return true; 
         }
-        var newUser = mapper.Map<Models.User>(userDto);
+        else
+        {
+            var newUser = mapper.Map<Models.User>(userDto);
 
-        await repository.AddAsync(newUser, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
-        return true;
+            await repository.AddAsync(newUser, cancellationToken);
+           
+            logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
+        }
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<bool> IsUserExists(long userId, CancellationToken cancellationToken = default)

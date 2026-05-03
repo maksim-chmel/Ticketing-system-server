@@ -35,10 +35,7 @@ public class FeedbackController(IFeedbackService feedbackService,
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request,CancellationToken cancellationToken)
     {
-        var updated = await feedbackService.UpdateStatus(id, request.Status,cancellationToken);
-        if (!updated)
-            throw new NotFoundException($"Feedback with id={id} not found");
-
+        await feedbackService.UpdateStatus(id, request.Status,cancellationToken);
         return NoContent();
     }
 }

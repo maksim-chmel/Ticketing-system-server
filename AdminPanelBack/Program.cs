@@ -61,8 +61,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
 builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddAutoMapper(typeof(StatisticProfile));
 
 builder.Services.AddCors(options =>
 {

@@ -1,12 +1,13 @@
 using AdminPanelBack.DB;
 using AdminPanelBack.DTO;
+using AdminPanelBack.Exceptions;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 using AutoMapper;
 
 namespace AdminPanelBack.Services.Feedback;
 
-public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogger<FeedbackService> logger, AppDbContext context): IFeedbackService
+public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogger<FeedbackService> logger, IUnitOfWork unitOfWork): IFeedbackService
 {
     public async Task<List<FeedbackDto>> GetAllFeedbacksAsync(int page, int pageSize,CancellationToken cancellationToken = default)
     {
@@ -21,18 +22,17 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogg
 
         return mapper.Map<List<FeedbackDto>>(feedbacks);
     }
-    public async Task<bool> UpdateStatus(int feedbackId , FeedbackStatus status,CancellationToken cancellationToken =  default)
+    public async Task UpdateStatus(int feedbackId , FeedbackStatus status,CancellationToken cancellationToken =  default)
     {
         var feedback = await repository.FindAsyncById(feedbackId, cancellationToken);
         if (feedback == null)
         {
             logger.LogWarning($"Feedback not found: {feedbackId}");
-            return false;
+            throw new NotFoundException($"Feedback not found: {feedbackId}");
         }
         feedback.Status = status;
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation($"Feedback updated: {feedback.Id}");
-        return true;
 
     }
 
@@ -40,7 +40,7 @@ public class FeedbackService(IFeedbackRepository repository,IMapper mapper,ILogg
     { 
         var feedback = mapper.Map<Models.Feedback>(dto);
         await repository.AddFeedbackAsync(feedback, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation($"Feedback created: {feedback.Id}");
         
     }
