@@ -106,4 +106,35 @@ public class FeedbackServiceTests
         result.Should().HaveCount(1);
         result[0].Id.Should().Be(1);
     }
+
+    [Fact]
+    public async Task GetAllUsersFeedbacksAsync_ReturnsMappedFeedbacksForUser()
+    {
+        var feedbacks = new List<Feedback>
+        {
+            new() { Id = 1, UserId = 42, Comment = "hello" },
+            new() { Id = 2, UserId = 42, Comment = "world" }
+        };
+        _mockRepo.Setup(r => r.GetUserFeedbacksAsync(42, It.IsAny<CancellationToken>())).ReturnsAsync(feedbacks);
+
+        var result = await _service.GetAllUsersFeedbacksAsync(42);
+
+        result.Should().HaveCount(2);
+        result.Should().AllSatisfy(f => f.UserId.Should().Be(42));
+    }
+
+    [Fact]
+    public async Task GetNewFeedbacksForOperatorAsync_ReturnsPulledFeedbacks()
+    {
+        var feedbacks = new List<Feedback>
+        {
+            new() { Id = 1, UserId = 1, Comment = "test" }
+        };
+        _mockRepo.Setup(r => r.PullUnsentToOperatorAsync(100, It.IsAny<CancellationToken>())).ReturnsAsync(feedbacks);
+
+        var result = await _service.GetNewFeedbacksForOperatorAsync();
+
+        result.Should().HaveCount(1);
+        result[0].Id.Should().Be(1);
+    }
 }

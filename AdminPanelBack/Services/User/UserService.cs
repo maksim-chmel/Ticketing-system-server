@@ -1,11 +1,11 @@
-using AdminPanelBack.DB;
 using AdminPanelBack.DTO;
+using AdminPanelBack.Exceptions;
 using AdminPanelBack.Repository;
 using AutoMapper;
 
 namespace AdminPanelBack.Services.User;
 
-public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
+public class UserService(IUserRepository repository, IMapper mapper, ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
 {
     public async Task<List<UserDto>> GetAllUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -13,17 +13,23 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         var users = await repository.GetUsersPageAsync(skip, pageSize, cancellationToken);
         return mapper.Map<List<UserDto>>(users);
     }
+
     public async Task<List<long>> GetAllUsersIds(CancellationToken cancellationToken = default)
     {
         return await repository.GetAllUserIdsAsync(cancellationToken);
     }
-    
+
     public async Task<Models.User?> ManageComment(long userId, string comment, CancellationToken cancellationToken = default)
     {
         var user = await repository.FindAsyncById(userId, cancellationToken);
-        if (user == null) return null;
-        user.Comments =  comment;
+        if (user == null)
+        {
+            logger.LogWarning("User not found when managing comment. UserId: {UserId}", userId);
+            throw new NotFoundException($"User not found: {userId}");
+        }
+        user.Comments = comment;
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Comment updated for user {UserId}", userId);
         return user;
     }
 
@@ -32,8 +38,8 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         logger.LogDebug("Starting registration/update for UserID: {UserId}", userDto.UserId);
 
         var user = await repository.FindAsyncById(userDto.UserId, cancellationToken);
-    
-        if (user != null) 
+
+        if (user != null)
         {
             mapper.Map(userDto, user);
             logger.LogInformation("Existing user {UserId} successfully updated", userDto.UserId);
@@ -41,9 +47,7 @@ public class UserService(IUserRepository repository,IMapper mapper,ILogger<UserS
         else
         {
             var newUser = mapper.Map<Models.User>(userDto);
-
             await repository.AddAsync(newUser, cancellationToken);
-           
             logger.LogInformation("New user registered successfully. Assigned ID: {UserId}", newUser.UserId);
         }
         await unitOfWork.SaveChangesAsync(cancellationToken);

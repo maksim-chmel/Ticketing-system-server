@@ -1,10 +1,9 @@
-using AdminPanelBack.DB;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 
 namespace AdminPanelBack.Services.Broadcast;
 
-public class BroadcastMessageService(IBroadcastMessageRepository repository,ILogger<BroadcastMessageService> logger, IUnitOfWork unitOfWork) : IBroadcastMessageService
+public class BroadcastMessageService(IBroadcastMessageRepository repository, ILogger<BroadcastMessageService> logger, IUnitOfWork unitOfWork) : IBroadcastMessageService
 {
     public async Task CreateBroadcastMessage(string message, CancellationToken cancellationToken = default)
     {
@@ -14,15 +13,15 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository,ILog
             Created = DateTime.UtcNow,
             IsActive = true
         };
-       repository.AddBroadcastMessage(newBroadcastMessage);
-       await unitOfWork.SaveChangesAsync(cancellationToken);
-       logger.LogInformation($"Broadcast message created: {newBroadcastMessage.Message}");
+        repository.AddBroadcastMessage(newBroadcastMessage);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Broadcast message created: {Message}", newBroadcastMessage.Message);
     }
 
     public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive(CancellationToken cancellationToken = default)
     {
         var list = await repository.GetActiveBroadcastMessagesToList(cancellationToken);
-        foreach (var msg  in list)
+        foreach (var msg in list)
         {
             msg.IsActive = false;
             repository.UpdateBroadcastMessage(msg);

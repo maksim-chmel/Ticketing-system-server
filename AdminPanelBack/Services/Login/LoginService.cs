@@ -1,12 +1,12 @@
-using AdminPanelBack.Models;
 using AdminPanelBack.Exceptions;
+using AdminPanelBack.Models;
+using AdminPanelBack.Repository;
 using AdminPanelBack.Services.Auth;
 using AdminPanelBack.Services.Token;
-using Microsoft.AspNetCore.Identity;
 
 namespace AdminPanelBack.Services.Login;
 
-public class LoginService(UserManager<Admin> userManager, ITokenService tokenService,
+public class LoginService(IAdminRepository adminRepository, ITokenService tokenService,
     IRefreshTokenService refreshTokenService, ILogger<LoginService> logger, IAuthService authService) : ILoginService
 {
     public async Task<(string accessToken, string refreshToken)> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default)
@@ -31,7 +31,7 @@ public class LoginService(UserManager<Admin> userManager, ITokenService tokenSer
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        var user = await userManager.FindByIdAsync(token.UserId);
+        var user = await adminRepository.FindByIdAsync(token.UserId);
         if (user == null)
         {
             logger.LogWarning("User not found during token refresh");
@@ -47,7 +47,7 @@ public class LoginService(UserManager<Admin> userManager, ITokenService tokenSer
 
     private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user, CancellationToken cancellationToken = default)
     {
-        var roles = await userManager.GetRolesAsync(user);
+        var roles = await adminRepository.GetRolesAsync(user);
         var accessToken = tokenService.GenerateToken(user.Id, user.UserName!, roles);
         var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id, cancellationToken);
         logger.LogInformation("Tokens successfully issued for admin {Username} (Id: {UserId})", user.UserName, user.Id);

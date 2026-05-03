@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Repository;
 
-public class FeedbackRepository(AppDbContext dbContext) 
+public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackRepository> logger)
     : Repository<Feedback>(dbContext), IFeedbackRepository
 {
     private readonly AppDbContext _dbContext = dbContext;
@@ -23,8 +23,8 @@ public class FeedbackRepository(AppDbContext dbContext)
         return await _dbContext.Feedbacks
             .AsNoTracking()
             .Include(f => f.User)
-            .Where(f => f.UserId == userId) 
-            .OrderByDescending(f => f.CreatedDate) 
+            .Where(f => f.UserId == userId)
+            .OrderByDescending(f => f.CreatedDate)
             .ToListAsync(cancellationToken);
     }
 
@@ -43,7 +43,6 @@ public class FeedbackRepository(AppDbContext dbContext)
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            // Сначала выбираем конкретные ID, которые будем обрабатывать.
             var ids = await _dbContext.Feedbacks
                 .Where(f => !f.IsSentToOperator)
                 .OrderBy(f => f.CreatedDate)
@@ -57,12 +56,10 @@ public class FeedbackRepository(AppDbContext dbContext)
                 return new List<Feedback>();
             }
 
-            // Обновляем только те записи, которые выбрали выше — без гонки данных.
             await _dbContext.Feedbacks
                 .Where(f => ids.Contains(f.Id))
                 .ExecuteUpdateAsync(s => s.SetProperty(f => f.IsSentToOperator, true), cancellationToken);
 
-            // Загружаем именно эти записи (без фильтра по дате — он был некорректен).
             var list = await _dbContext.Feedbacks
                 .Include(f => f.User)
                 .Where(f => ids.Contains(f.Id))
@@ -71,8 +68,9 @@ public class FeedbackRepository(AppDbContext dbContext)
             await transaction.CommitAsync(cancellationToken);
             return list;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Error pulling unsent feedbacks to operator");
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }

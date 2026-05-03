@@ -19,15 +19,13 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
         return Convert.ToBase64String(hashBytes);
     }
 
-    public async Task<string> CreateRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
+    public Task<string> CreateRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
     {
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var tokenHash = HashToken(token);
-      
 
         var refreshToken = new RefreshToken
         {
-           
             Token = string.Empty,
             TokenHash = tokenHash,
             UserId = userId,
@@ -35,10 +33,8 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
         };
 
         dbContext.RefreshTokens.Add(refreshToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
 
-        
-        return token;
+        return Task.FromResult(token);
     }
 
     public async Task<bool> ValidateRefreshTokenAsync(string token, string userId, CancellationToken cancellationToken = default)
@@ -65,12 +61,11 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
             {
                 found.TokenHash = tokenHash;
                 found.Token = string.Empty;
-                await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
 
         var isValid = found != null;
-      
+        
         return isValid;
     }
 
@@ -92,8 +87,6 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
         if (existing != null)
         {
             existing.IsRevoked = true;
-            await dbContext.SaveChangesAsync(cancellationToken);
-            
         }
        
     }
@@ -110,8 +103,6 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
         {
             token.IsRevoked = true;
         }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
        
     }
 
@@ -133,7 +124,6 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
             if (token == null || !string.IsNullOrEmpty(token.TokenHash)) return token;
             token.TokenHash = tokenHash;
             token.Token = string.Empty;
-            await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return token;

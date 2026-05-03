@@ -4,6 +4,7 @@ using AdminPanelBack.Profiles;
 using AdminPanelBack.Repository;
 using AdminPanelBack.Services.Statistic;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AdminPanelBack.Tests;
@@ -17,7 +18,7 @@ public class StatisticsServiceTests
         cfg.AddProfile<StatisticProfile>();
     }).CreateMapper();
 
-    private StatisticsService CreateService() => new(_repositoryMock.Object, _mapper);
+    private StatisticsService CreateService() => new(_repositoryMock.Object, _mapper, new Mock<ILogger<StatisticsService>>().Object);
 
     [Fact]
     public async Task GetStatusDistributionAsync_ShouldReturnMappedDtos()

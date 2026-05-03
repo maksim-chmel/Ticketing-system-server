@@ -1,43 +1,14 @@
-using System.Security.Cryptography;
-using System.Text;
-using AdminPanelBack.DB;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
-using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Services.Token;
 
-public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> logger,IRefreshTokenRepository refreshTokenRepository) : IRefreshTokenService
+public class RefreshTokenService(ILogger<RefreshTokenService> logger, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork) : IRefreshTokenService
 {
-    private static string HashToken(string rawToken)
-    {
-        if (string.IsNullOrEmpty(rawToken))
-        {
-            throw new ArgumentException("Raw token cannot be null or empty", nameof(rawToken));
-        }
-
-        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
-        return Convert.ToBase64String(hashBytes);
-    }
-
     public async Task<string> CreateRefreshTokenAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var tokenHash = HashToken(token);
-        logger.LogInformation("Creating refresh token for user {UserId}", userId);
-
-        var refreshToken = new RefreshToken
-        {
-           
-            Token = string.Empty,
-            TokenHash = tokenHash,
-            UserId = userId,
-            ExpiresAt = DateTime.UtcNow.AddDays(7)
-        };
-
-        db.RefreshTokens.Add(refreshToken);
-        await db.SaveChangesAsync(cancellationToken);
-
+        var token = await refreshTokenRepository.CreateRefreshTokenAsync(userId, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Refresh token created for user {UserId}", userId);
         return token;
     }
@@ -45,32 +16,9 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
     public async Task<bool> ValidateRefreshTokenAsync(string token, string userId, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Validating refresh token for user {UserId}", userId);
-
-        var tokenHash = HashToken(token);
-        var found = await db.RefreshTokens.FirstOrDefaultAsync(r =>
-            r.TokenHash == tokenHash &&
-            r.UserId == userId &&
-            !r.IsRevoked &&
-            r.ExpiresAt > DateTime.UtcNow, cancellationToken);
-
-        if (found == null)
-        {
-           
-            found = await db.RefreshTokens.FirstOrDefaultAsync(r =>
-                r.Token == token &&
-                r.UserId == userId &&
-                !r.IsRevoked &&
-                r.ExpiresAt > DateTime.UtcNow, cancellationToken);
-
-            if (found != null && string.IsNullOrEmpty(found.TokenHash))
-            {
-                found.TokenHash = tokenHash;
-                found.Token = string.Empty;
-                await db.SaveChangesAsync(cancellationToken);
-            }
-        }
-
-        var isValid = found != null;
+        var isValid = await refreshTokenRepository.ValidateRefreshTokenAsync(token, userId, cancellationToken);
+        if (isValid)
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Token validation result for user {UserId}: {IsValid}", userId, isValid);
         return isValid;
     }
@@ -78,77 +26,24 @@ public class RefreshTokenService(AppDbContext db, ILogger<RefreshTokenService> l
     public async Task RevokeRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Attempting to revoke refresh token");
-
-        var tokenHash = HashToken(token);
-        var existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == tokenHash, cancellationToken);
-        if (existing == null)
-        {
-            existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.Token == token, cancellationToken);
-            if (existing != null && string.IsNullOrEmpty(existing.TokenHash))
-            {
-                existing.TokenHash = tokenHash;
-                existing.Token = string.Empty;
-            }
-        }
-        if (existing != null)
-        {
-            existing.IsRevoked = true;
-            await db.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Refresh token successfully revoked");
-        }
-        else
-        {
-            logger.LogWarning("Refresh token not found for revocation");
-        }
+        await refreshTokenRepository.RevokeRefreshTokenAsync(token, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Refresh token successfully revoked");
     }
 
     public async Task RevokeAllUserTokensAsync(string userId, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Revoking all active tokens for user {UserId}", userId);
-
-        var tokens = await db.RefreshTokens
-            .Where(t => t.UserId == userId && !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow)
-            .ToListAsync(cancellationToken);
-
-        foreach (var token in tokens)
-        {
-            token.IsRevoked = true;
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Revoked {Count} tokens for user {UserId}", tokens.Count, userId);
+        await refreshTokenRepository.RevokeAllUserTokensAsync(userId, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<RefreshToken?> GetRefreshToken(string refreshToken, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Fetching refresh token");
-
-        var tokenHash = HashToken(refreshToken);
-        var token = await db.RefreshTokens.FirstOrDefaultAsync(t =>
-            t.TokenHash == tokenHash &&
-            !t.IsRevoked &&
-            t.ExpiresAt > DateTime.UtcNow, cancellationToken);
-
-        if (token == null)
-        {
-            token = await db.RefreshTokens.FirstOrDefaultAsync(t =>
-                t.Token == refreshToken &&
-                !t.IsRevoked &&
-                t.ExpiresAt > DateTime.UtcNow, cancellationToken);
-
-            if (token != null && string.IsNullOrEmpty(token.TokenHash))
-            {
-                token.TokenHash = tokenHash;
-                token.Token = string.Empty;
-                await db.SaveChangesAsync(cancellationToken);
-            }
-        }
-
-        if (token == null)
-            logger.LogWarning("Refresh token not found or expired");
-        else
-            logger.LogInformation("Refresh token found and valid");
-
+        var token = await refreshTokenRepository.GetRefreshToken(refreshToken, cancellationToken);
+        if (token != null)
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         return token;
     }
 }

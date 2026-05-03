@@ -1,10 +1,10 @@
-using AdminPanelBack.Models;
 using AdminPanelBack.Exceptions;
-using Microsoft.AspNetCore.Identity;
+using AdminPanelBack.Models;
+using AdminPanelBack.Repository;
 
 namespace AdminPanelBack.Services.Auth;
 
-public class AuthService(ILogger<AuthService> logger, UserManager<Admin> userManager) : IAuthService
+public class AuthService(ILogger<AuthService> logger, IAdminRepository adminRepository) : IAuthService
 {
     public async Task<Admin> FindAdminByUsernameOrThrow(string username)
     {
@@ -14,7 +14,7 @@ public class AuthService(ILogger<AuthService> logger, UserManager<Admin> userMan
             throw new ValidationException("Username cannot be empty");
         }
 
-        var user = await userManager.FindByNameAsync(username);
+        var user = await adminRepository.FindByUsernameAsync(username);
         if (user is null)
         {
             logger.LogWarning("Admin with username {Username} not found", username);
@@ -34,7 +34,7 @@ public class AuthService(ILogger<AuthService> logger, UserManager<Admin> userMan
             throw new ValidationException("Password cannot be empty");
         }
 
-        var result = await userManager.CheckPasswordAsync(admin, password);
+        var result = await adminRepository.CheckPasswordAsync(admin, password);
         if (!result)
         {
             logger.LogWarning("Invalid password for user {Username}", admin.UserName);
