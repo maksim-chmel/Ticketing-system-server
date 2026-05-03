@@ -34,7 +34,9 @@ public class UserController(IUserService service,
     {
         var user = await service.GetUserById(userId, cancellationToken);
         if (user == null)
-            throw new NotFoundException($"User with id={userId} not found");
+        {
+            return NotFound($"User with id={userId} not found");
+        }
         return Ok(user);
     }
 

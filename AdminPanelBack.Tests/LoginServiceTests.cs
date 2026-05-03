@@ -39,7 +39,7 @@ public class LoginServiceTests
     public async Task RefreshTokensAsync_WhenTokenIsNull_ThrowsUnauthorizedException()
     {
         _mockRefreshTokenService
-            .Setup(r => r.GetRefreshToken("invalid_token", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetRefreshTokenAsync("invalid_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync((RefreshToken?)null);
 
         await _service.Invoking(s => s.RefreshTokensAsync("invalid_token")).Should()
@@ -53,7 +53,7 @@ public class LoginServiceTests
         _mockAdminRepository.Setup(r => r.FindByIdAsync("123")).ReturnsAsync(user);
         _mockAdminRepository.Setup(r => r.GetRolesAsync(user)).ReturnsAsync(new List<string>());
         _mockRefreshTokenService
-            .Setup(r => r.GetRefreshToken("valid_token", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetRefreshTokenAsync("valid_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RefreshToken { UserId = "123" });
 
         var result = await _service.RefreshTokensAsync("valid_token");
@@ -66,7 +66,7 @@ public class LoginServiceTests
     {
         _mockAdminRepository.Setup(r => r.FindByIdAsync("123")).ReturnsAsync((Admin?)null);
         _mockRefreshTokenService
-            .Setup(r => r.GetRefreshToken("valid_token", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetRefreshTokenAsync("valid_token", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RefreshToken { UserId = "123" });
 
         await _service.Invoking(s => s.RefreshTokensAsync("valid_token")).Should()

@@ -38,10 +38,10 @@ public class RefreshTokenService(ILogger<RefreshTokenService> logger, IRefreshTo
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<RefreshToken?> GetRefreshToken(string refreshToken, CancellationToken cancellationToken = default)
+    public async Task<RefreshToken?> GetRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Fetching refresh token");
-        var token = await refreshTokenRepository.GetRefreshToken(refreshToken, cancellationToken);
+        var token = await refreshTokenRepository.GetRefreshTokenAsync(refreshToken, cancellationToken);
         if (token != null)
             await unitOfWork.SaveChangesAsync(cancellationToken);
         return token;

@@ -24,7 +24,7 @@ public class LoginService(IAdminRepository adminRepository, ITokenService tokenS
     {
         logger.LogInformation("Attempting to refresh tokens");
 
-        var token = await refreshTokenService.GetRefreshToken(currentRefreshToken, cancellationToken);
+        var token = await refreshTokenService.GetRefreshTokenAsync(currentRefreshToken, cancellationToken);
         if (token == null)
         {
             logger.LogWarning("Invalid refresh token provided");

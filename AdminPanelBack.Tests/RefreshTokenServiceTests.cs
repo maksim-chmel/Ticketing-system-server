@@ -72,23 +72,23 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task GetRefreshToken_WhenFound_ReturnsTokenAndSaves()
+    public async Task GetRefreshTokenAsync_WhenFound_ReturnsTokenAndSaves()
     {
         var token = new RefreshToken { UserId = "user1" };
-        _mockRepo.Setup(r => r.GetRefreshToken("token", It.IsAny<CancellationToken>())).ReturnsAsync(token);
+        _mockRepo.Setup(r => r.GetRefreshTokenAsync("token", It.IsAny<CancellationToken>())).ReturnsAsync(token);
 
-        var result = await _service.GetRefreshToken("token");
+        var result = await _service.GetRefreshTokenAsync("token");
 
         result.Should().Be(token);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GetRefreshToken_WhenNotFound_ReturnsNullAndDoesNotSave()
+    public async Task GetRefreshTokenAsync_WhenNotFound_ReturnsNullAndDoesNotSave()
     {
-        _mockRepo.Setup(r => r.GetRefreshToken("invalid", It.IsAny<CancellationToken>())).ReturnsAsync((RefreshToken?)null);
+        _mockRepo.Setup(r => r.GetRefreshTokenAsync("invalid", It.IsAny<CancellationToken>())).ReturnsAsync((RefreshToken?)null);
 
-        var result = await _service.GetRefreshToken("invalid");
+        var result = await _service.GetRefreshTokenAsync("invalid");
 
         result.Should().BeNull();
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);

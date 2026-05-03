@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using AdminPanelBack;
 using AdminPanelBack.DB;
 using AdminPanelBack.Middleware;
@@ -17,6 +18,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Metrics;
@@ -67,6 +69,20 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddAutoMapper(typeof(StatisticProfile));
+builder.Services.AddRateLimiter(options =>
+{
+    
+    options.AddFixedWindowLimiter(policyName: "fixed", fixedOptions =>
+    {
+        fixedOptions.PermitLimit = 10; 
+        fixedOptions.Window = TimeSpan.FromSeconds(10); 
+        fixedOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        fixedOptions.QueueLimit = 2; 
+    });
+
+    
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 builder.Services.AddCors(options =>
 {
@@ -192,12 +208,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseSerilogRequestLogging();
+app.UseRateLimiter();
 app.UseRouting();
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.MapPrometheusScrapingEndpoint("/metrics");
 

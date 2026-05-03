@@ -2,10 +2,12 @@ using AdminPanelBack.Models;
 using AdminPanelBack.Services.Login;
 using AdminPanelBack.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AdminPanelBack.Controllers;
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("fixed")]
 public class AuthController(ILogger<AuthController> logger,ILoginService loginService,IWebHostEnvironment env) : ControllerBase
 {
     private const string RefreshTokenCookie = "refreshToken";
