@@ -3,6 +3,7 @@ using AdminPanelBack.Exceptions;
 using AdminPanelBack.Services.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace AdminPanelBack.Controllers;
 
@@ -10,7 +11,10 @@ namespace AdminPanelBack.Controllers;
 [Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/users")]
-public class UserController(IUserService service, ILogger<UserController> logger) : ControllerBase
+public class UserController(
+    IUserService service,
+    IOutputCacheStore outputCacheStore,
+    ILogger<UserController> logger) : ControllerBase
 {
     /// <summary>Get a list of users (with pagination).</summary>
     /// <param name="page">The page number (minimum 1).</param>
@@ -20,6 +24,7 @@ public class UserController(IUserService service, ILogger<UserController> logger
     /// <response code="401">Unauthorized.</response>
     /// <response code="403">Access denied.</response>
     [HttpGet]
+    [OutputCache(PolicyName = "AdminUsersListPolicy")]
     [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -45,6 +50,7 @@ public class UserController(IUserService service, ILogger<UserController> logger
     /// <response code="403">Access denied.</response>
     /// <response code="404">User not found.</response>
     [HttpGet("{userId:long}")]
+    [OutputCache(PolicyName = "AdminUserByIdPolicy")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -76,6 +82,7 @@ public class UserController(IUserService service, ILogger<UserController> logger
     {
         logger.LogInformation("Updating comment for user Id={UserId}", userId);
         var result = await service.ManageComment(userId, request.Comment, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("users", cancellationToken);
         logger.LogInformation("Comment for user Id={UserId} updated successfully", userId);
         return Ok(result);
     }

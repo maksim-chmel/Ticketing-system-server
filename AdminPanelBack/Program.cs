@@ -67,6 +67,12 @@ builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddScoped<ApiKeyAuthFilter>();
+var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    throw new Exception("Redis connection string is not set in environment variables.");
+}
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
@@ -80,6 +86,45 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+
+builder.Services.AddStackExchangeRedisOutputCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "AdminPanelBack:";
+});
+
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("AdminFeedbacksPolicy", policyBuilder =>
+    {
+        policyBuilder.AddPolicy<AuthorizedOutputCachePolicy>();
+        policyBuilder.Expire(TimeSpan.FromSeconds(60));
+        policyBuilder.SetVaryByQuery("page", "pageSize");
+        policyBuilder.Tag("feedbacks");
+    });
+
+    options.AddPolicy("AdminStatisticsPolicy", policyBuilder =>
+    {
+        policyBuilder.AddPolicy<AuthorizedOutputCachePolicy>();
+        policyBuilder.Expire(TimeSpan.FromMinutes(3));
+        policyBuilder.Tag("statistics");
+    });
+
+    options.AddPolicy("AdminUsersListPolicy", policyBuilder =>
+    {
+        policyBuilder.AddPolicy<AuthorizedOutputCachePolicy>();
+        policyBuilder.Expire(TimeSpan.FromSeconds(60));
+        policyBuilder.SetVaryByQuery("page", "pageSize");
+        policyBuilder.Tag("users");
+    });
+
+    options.AddPolicy("AdminUserByIdPolicy", policyBuilder =>
+    {
+        policyBuilder.AddPolicy<AuthorizedOutputCachePolicy>();
+        policyBuilder.Expire(TimeSpan.FromMinutes(2));
+        policyBuilder.Tag("users");
+    });
+});
 builder.Services.AddIdentity<Admin, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -246,6 +291,7 @@ app.UseRouting();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseOutputCache();
 app.MapControllers();
 app.MapPrometheusScrapingEndpoint("/metrics");
 

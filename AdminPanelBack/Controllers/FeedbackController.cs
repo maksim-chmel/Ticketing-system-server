@@ -2,6 +2,7 @@ using AdminPanelBack.DTO;
 using AdminPanelBack.Services.Feedback;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace AdminPanelBack.Controllers;
 
@@ -9,7 +10,10 @@ namespace AdminPanelBack.Controllers;
 [Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/feedbacks")]
-public class FeedbackController(IFeedbackService feedbackService, ILogger<FeedbackController> logger) : ControllerBase
+public class FeedbackController(
+    IFeedbackService feedbackService,
+    IOutputCacheStore outputCacheStore,
+    ILogger<FeedbackController> logger) : ControllerBase
 {
     /// <summary>Get a list of feedback requests (with pagination).</summary>
     /// <param name="page">The page number (minimum 1).</param>
@@ -19,6 +23,7 @@ public class FeedbackController(IFeedbackService feedbackService, ILogger<Feedba
     /// <response code="401">Unauthorized.</response>
     /// <response code="403">Access denied.</response>
     [HttpGet]
+    [OutputCache(PolicyName = "AdminFeedbacksPolicy")]
     [ProducesResponseType(typeof(List<FeedbackDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -54,6 +59,8 @@ public class FeedbackController(IFeedbackService feedbackService, ILogger<Feedba
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request, CancellationToken cancellationToken)
     {
         await feedbackService.UpdateStatus(id, request.Status, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
+        await outputCacheStore.EvictByTagAsync("statistics", cancellationToken);
         return NoContent();
     }
 }

@@ -6,6 +6,7 @@ using AdminPanelBack.Services.Broadcast;
 using AdminPanelBack.Services.Feedback;
 using AdminPanelBack.Services.User;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace AdminPanelBack.Controllers;
 
@@ -16,7 +17,8 @@ namespace AdminPanelBack.Controllers;
 public class BotFeedbackController(
     IFeedbackService feedbackService,
     IUserService userService,
-    IBroadcastMessageService broadcastMessageService) : ControllerBase
+    IBroadcastMessageService broadcastMessageService,
+    IOutputCacheStore outputCacheStore) : ControllerBase
 {
     /// <summary>Create a feedback request from a bot user.</summary>
     /// <response code="204">Feedback request created successfully.</response>
@@ -29,6 +31,8 @@ public class BotFeedbackController(
     public async Task<IActionResult> CreateFeedback([FromBody] UsersMessageDto messageDto, CancellationToken cancellationToken)
     {
         await feedbackService.CreateFeedbackAsync(messageDto, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
+        await outputCacheStore.EvictByTagAsync("statistics", cancellationToken);
         return NoContent();
     }
 
@@ -80,6 +84,7 @@ public class BotFeedbackController(
 
         userDto.UserId = userId;
         await userService.RegistrationNewUser(userDto, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("users", cancellationToken);
         return NoContent();
     }
 
@@ -120,6 +125,7 @@ public class BotFeedbackController(
     public async Task<IActionResult> PullUnnotifiedFeedbacks(CancellationToken cancellationToken)
     {
         var list = await feedbackService.GetNewFeedbacksForOperatorAsync(cancellationToken);
+        await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
         return Ok(list);
     }
 }

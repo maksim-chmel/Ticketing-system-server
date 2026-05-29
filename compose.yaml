@@ -23,6 +23,7 @@
       - SEQ_URL=${SEQ_URL:-http://seq:5341}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - API_KEY=${API_KEY}
+      - REDIS_CONNECTION_STRING=${REDIS_CONNECTION_STRING}
     networks:
       - feedback_net
   
