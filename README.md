@@ -146,13 +146,31 @@ All routes are prefixed with `/api`.
 
 ### Quick Start (Docker Compose)
 
-Run with Docker Compose (app + PostgreSQL + Seq). **Redis is not included** — provide an external instance via `REDIS_CONNECTION_STRING` in `.env`:
+One command — no `.env` required (sensible defaults for local demo):
 
 ```bash
 docker compose up -d --build
 ```
 
-The backend listens on `http://localhost:5101` and Swagger UI is available at `/swagger` in Development mode.
+| Service | URL |
+|---|---|
+| API | http://localhost:5101 |
+| Swagger | http://localhost:5101/swagger |
+| Seq | http://localhost:8081 |
+| PostgreSQL (host) | `localhost:5433`, db `feedbackdb`, user `postgres`, password `postgres` |
+
+**Default admin** (created on first startup if none exists):
+
+| | |
+|---|---|
+| Email | `admin@example.com` |
+| Password | `YourStrongAdminPassword123!` |
+
+Login: `POST http://localhost:5101/api/auth/login` with `{"username":"admin@example.com","password":"YourStrongAdminPassword123!"}`.
+
+Bot API key (header `X-Api-Key`): `dev-demo-api-key`.
+
+Override any value via `.env` (see `.env.example`). For production, set strong secrets and do not rely on compose defaults.
 
 ### Environment Variables
 

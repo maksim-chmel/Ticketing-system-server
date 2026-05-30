@@ -60,6 +60,7 @@ public static class SeedAdmin
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(admin, "Admin");
+                Log.Information("Default admin account created. Email: {AdminEmail}", adminEmail);
                 return true;
             }
             return false;

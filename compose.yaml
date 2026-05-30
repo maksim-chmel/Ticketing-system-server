@@ -1,4 +1,7 @@
-﻿services:
+﻿# One-command demo stack: docker compose up -d --build
+# Default admin: admin@example.com / YourStrongAdminPassword123!
+# Override secrets via .env (see .env.example) for non-demo deployments.
+services:
   adminpanel-back:
     build:
       context: .
@@ -9,6 +12,8 @@
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       seq:
         condition: service_started
@@ -22,8 +27,11 @@
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=feedbackdb;Username=postgres;Password=${DB_PASSWORD:-postgres}
       - SEQ_URL=${SEQ_URL:-http://seq:5341}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
-      - API_KEY=${API_KEY}
-      - REDIS_CONNECTION_STRING=${REDIS_CONNECTION_STRING}
+      - API_KEY=${API_KEY:-dev-demo-api-key}
+      - REDIS_CONNECTION_STRING=${REDIS_CONNECTION_STRING:-redis:6379}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-YourStrongAdminPassword123!}
+      - ADMIN_NAME=${ADMIN_NAME:-Super Admin}
     networks:
       - feedback_net
   
@@ -62,6 +70,17 @@
     volumes:
       - seq_data:/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: adminpanel-redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - feedback_net
 volumes:
   postgres_data:
   seq_data:
