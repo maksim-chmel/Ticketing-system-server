@@ -18,7 +18,7 @@ public class AuthService(ILogger<AuthService> logger, IAdminRepository adminRepo
         if (user is null)
         {
             logger.LogWarning("Admin with username {Username} not found", username);
-            throw new NotFoundException("Admin not found");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         return user;
@@ -38,7 +38,7 @@ public class AuthService(ILogger<AuthService> logger, IAdminRepository adminRepo
         if (!result)
         {
             logger.LogWarning("Invalid password for user {Username}", admin.UserName);
-            throw new UnauthorizedException("Invalid password");
+            throw new UnauthorizedException("Invalid credentials");
         }
     }
 }

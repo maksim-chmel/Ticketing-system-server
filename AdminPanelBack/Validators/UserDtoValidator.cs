@@ -12,8 +12,8 @@ public class UserDtoValidator : AbstractValidator<UserDto>
             .MaximumLength(100);
 
         RuleFor(x => x.Phone)
-            .MaximumLength(20)
-            .When(x => x.Phone != null);
+            .NotEmpty()
+            .MaximumLength(20);
 
         RuleFor(x => x.LastName)
             .MaximumLength(100)

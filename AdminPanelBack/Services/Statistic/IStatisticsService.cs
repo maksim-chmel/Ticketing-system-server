@@ -5,5 +5,5 @@ namespace AdminPanelBack.Services.Statistic;
 public interface IStatisticsService
 {
     public Task<List<StatusDistributionDto>> GetStatusDistributionAsync(CancellationToken cancellationToken = default);
-    public Task<List<TimeDisrtibutionDto>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default);
+    public Task<List<TimeDistributionDto>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default);
 }

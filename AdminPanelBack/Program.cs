@@ -144,6 +144,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
 builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddAutoMapper(typeof(StatisticProfile));
@@ -152,13 +153,20 @@ builder.Services.AddRateLimiter(options =>
     
     options.AddFixedWindowLimiter(policyName: "fixed", fixedOptions =>
     {
-        fixedOptions.PermitLimit = 10; 
-        fixedOptions.Window = TimeSpan.FromSeconds(10); 
+        fixedOptions.PermitLimit = 10;
+        fixedOptions.Window = TimeSpan.FromSeconds(10);
         fixedOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        fixedOptions.QueueLimit = 2; 
+        fixedOptions.QueueLimit = 2;
     });
 
-    
+    options.AddFixedWindowLimiter(policyName: "bot", fixedOptions =>
+    {
+        fixedOptions.PermitLimit = 100;
+        fixedOptions.Window = TimeSpan.FromSeconds(10);
+        fixedOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        fixedOptions.QueueLimit = 10;
+    });
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 

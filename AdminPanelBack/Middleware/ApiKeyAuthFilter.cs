@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -17,8 +19,16 @@ public class ApiKeyAuthFilter(IConfiguration configuration) : IAuthorizationFilt
             return;
         }
 
-        if (!context.HttpContext.Request.Headers.TryGetValue(ApiKeyHeaderName, out var providedKey) ||
-            !string.Equals(configuredKey, providedKey, StringComparison.Ordinal))
+        if (!context.HttpContext.Request.Headers.TryGetValue(ApiKeyHeaderName, out var providedKey))
+        {
+            context.Result = new UnauthorizedResult();
+            return;
+        }
+
+        var configuredBytes = Encoding.UTF8.GetBytes(configuredKey);
+        var providedBytes = Encoding.UTF8.GetBytes(providedKey.ToString());
+
+        if (!CryptographicOperations.FixedTimeEquals(configuredBytes, providedBytes))
         {
             context.Result = new UnauthorizedResult();
         }

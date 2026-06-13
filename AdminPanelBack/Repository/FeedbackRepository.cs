@@ -7,10 +7,9 @@ namespace AdminPanelBack.Repository;
 public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackRepository> logger)
     : Repository<Feedback>(dbContext), IFeedbackRepository
 {
-    private readonly AppDbContext _dbContext = dbContext;
 
     public Task<List<Feedback>> GetFeedbacksPageAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-        _dbContext.Feedbacks
+        Context.Feedbacks
             .AsNoTracking()
             .Include(f => f.User)
             .OrderByDescending(f => f.CreatedDate)
@@ -20,7 +19,7 @@ public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackReposito
 
     public async Task<List<Feedback>> GetUserFeedbacksAsync(long userId, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Feedbacks
+        return await Context.Feedbacks
             .AsNoTracking()
             .Include(f => f.User)
             .Where(f => f.UserId == userId)
@@ -28,22 +27,25 @@ public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackReposito
             .ToListAsync(cancellationToken);
     }
 
+    public Task<int> GetCountAsync(CancellationToken cancellationToken = default) =>
+        Context.Feedbacks.CountAsync(cancellationToken);
+
     public async Task AddFeedbackAsync(Feedback feedback, CancellationToken cancellationToken = default)
     {
-        await _dbContext.Feedbacks.AddAsync(feedback, cancellationToken);
+        await Context.Feedbacks.AddAsync(feedback, cancellationToken);
     }
 
     public void UpdateFeedback(Feedback feedback)
     {
-        _dbContext.Feedbacks.Update(feedback);
+        Context.Feedbacks.Update(feedback);
     }
 
     public async Task<List<Feedback>> PullUnsentToOperatorAsync(int take, CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await Context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            var ids = await _dbContext.Feedbacks
+            var ids = await Context.Feedbacks
                 .Where(f => !f.IsSentToOperator)
                 .OrderBy(f => f.CreatedDate)
                 .Take(take)
@@ -56,11 +58,11 @@ public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackReposito
                 return new List<Feedback>();
             }
 
-            await _dbContext.Feedbacks
+            await Context.Feedbacks
                 .Where(f => ids.Contains(f.Id))
                 .ExecuteUpdateAsync(s => s.SetProperty(f => f.IsSentToOperator, true), cancellationToken);
 
-            var list = await _dbContext.Feedbacks
+            var list = await Context.Feedbacks
                 .Include(f => f.User)
                 .Where(f => ids.Contains(f.Id))
                 .ToListAsync(cancellationToken);

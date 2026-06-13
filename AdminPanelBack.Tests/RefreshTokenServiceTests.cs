@@ -32,14 +32,14 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task ValidateRefreshTokenAsync_WhenValid_ReturnsTrueAndSaves()
+    public async Task ValidateRefreshTokenAsync_WhenValid_ReturnsTrue()
     {
         _mockRepo.Setup(r => r.ValidateRefreshTokenAsync("token", "user1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var result = await _service.ValidateRefreshTokenAsync("token", "user1");
 
         result.Should().BeTrue();
-        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task GetRefreshTokenAsync_WhenFound_ReturnsTokenAndSaves()
+    public async Task GetRefreshTokenAsync_WhenFound_ReturnsToken()
     {
         var token = new RefreshToken { UserId = "user1" };
         _mockRepo.Setup(r => r.GetRefreshTokenAsync("token", It.IsAny<CancellationToken>())).ReturnsAsync(token);
@@ -80,7 +80,7 @@ public class RefreshTokenServiceTests
         var result = await _service.GetRefreshTokenAsync("token");
 
         result.Should().Be(token);
-        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -22,4 +22,7 @@ public class UserRepository(AppDbContext context) : Repository<User>(context)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);
+
+    public Task<int> GetCountAsync(CancellationToken cancellationToken = default) =>
+        _context.Clients.CountAsync(cancellationToken);
 }

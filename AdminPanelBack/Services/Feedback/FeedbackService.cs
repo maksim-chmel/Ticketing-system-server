@@ -8,13 +8,15 @@ namespace AdminPanelBack.Services.Feedback;
 
 public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILogger<FeedbackService> logger, IUnitOfWork unitOfWork) : IFeedbackService
 {
-    public async Task<List<FeedbackDto>> GetAllFeedbacksAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<FeedbackDto>> GetAllFeedbacksAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Fetching feedbacks page {Page} with size {PageSize}", page, pageSize);
         var skip = (page - 1) * pageSize;
-        var feedbacks = await repository.GetFeedbacksPageAsync(skip, pageSize, cancellationToken);
-        logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
-        return mapper.Map<List<FeedbackDto>>(feedbacks);
+        var feedbacksTask = repository.GetFeedbacksPageAsync(skip, pageSize, cancellationToken);
+        var countTask = repository.GetCountAsync(cancellationToken);
+        await Task.WhenAll(feedbacksTask, countTask);
+        logger.LogInformation("Retrieved {Count} feedbacks", feedbacksTask.Result.Count);
+        return new PagedResult<FeedbackDto> { Items = mapper.Map<List<FeedbackDto>>(feedbacksTask.Result), TotalCount = countTask.Result };
     }
 
     public async Task<List<FeedbackDto>> GetAllUsersFeedbacksAsync(long userId, CancellationToken cancellationToken = default)

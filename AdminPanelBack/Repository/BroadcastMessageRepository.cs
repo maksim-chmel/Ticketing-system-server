@@ -7,20 +7,16 @@ namespace AdminPanelBack.Repository;
 public sealed class BroadcastMessageRepository(AppDbContext dbContext)
     : Repository<BroadcastMessage>(dbContext), IBroadcastMessageRepository
 {
-    private readonly AppDbContext _dbContext = dbContext;
 
     public void AddBroadcastMessage(BroadcastMessage message)
     {
-        _dbContext.BroadcastMessages.Add(message);
+        Context.BroadcastMessages.Add(message);
     }
 
-    public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesToList(CancellationToken cancellationToken = default)
+    public async Task<List<BroadcastMessage>> PullActiveBroadcastMessagesAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.BroadcastMessages.Where(b => b.IsActive).ToListAsync(cancellationToken);
-    }
-
-    public void UpdateBroadcastMessage(BroadcastMessage broadcastMessage)
-    {
-        _dbContext.BroadcastMessages.Update(broadcastMessage);
+        return await Context.BroadcastMessages
+            .FromSqlRaw(@"UPDATE ""BroadcastMessages"" SET ""IsActive"" = false WHERE ""IsActive"" = true RETURNING *")
+            .ToListAsync(cancellationToken);
     }
 }

@@ -1,6 +1,6 @@
 namespace AdminPanelBack.DTO;
 
-public class TimeDisrtibutionDto
+public class TimeDistributionDto
 {
     public int Value { get; set; }
     public string? Date { get; set; }

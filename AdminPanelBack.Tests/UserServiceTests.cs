@@ -133,11 +133,13 @@ public class UserServiceTests
             new() { UserId = 2, Phone = "222", FirstName = "B" }
         };
         _mockRepo.Setup(r => r.GetUsersPageAsync(0, 10, It.IsAny<CancellationToken>())).ReturnsAsync(users);
+        _mockRepo.Setup(r => r.GetCountAsync(It.IsAny<CancellationToken>())).ReturnsAsync(2);
 
         var result = await _service.GetAllUsers(1, 10);
 
-        result.Should().HaveCount(2);
-        result[0].UserId.Should().Be(1);
-        result[1].UserId.Should().Be(2);
+        result.Items.Should().HaveCount(2);
+        result.TotalCount.Should().Be(2);
+        result.Items[0].UserId.Should().Be(1);
+        result.Items[1].UserId.Should().Be(2);
     }
 }

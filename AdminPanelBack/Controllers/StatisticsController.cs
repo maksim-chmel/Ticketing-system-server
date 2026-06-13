@@ -35,7 +35,7 @@ public class StatisticsController(IStatisticsService service, ILogger<Statistics
     /// <response code="403">Access denied.</response>
     [HttpGet("requests-over-time")]
     [OutputCache(PolicyName = "AdminStatisticsPolicy")]
-    [ProducesResponseType(typeof(List<TimeDisrtibutionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<TimeDistributionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetRequestsOverTime(CancellationToken cancellationToken)

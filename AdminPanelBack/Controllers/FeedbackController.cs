@@ -24,10 +24,10 @@ public class FeedbackController(
     /// <response code="403">Access denied.</response>
     [HttpGet]
     [OutputCache(PolicyName = "AdminFeedbacksPolicy")]
-    [ProducesResponseType(typeof(List<FeedbackDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<FeedbackDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<List<FeedbackDto>>> GetAll(
+    public async Task<ActionResult<PagedResult<FeedbackDto>>> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
@@ -36,9 +36,9 @@ public class FeedbackController(
         pageSize = Math.Clamp(pageSize, 1, 200);
 
         logger.LogInformation("Fetching feedbacks. Page: {Page}, Size: {Size}", page, pageSize);
-        var feedbacks = await feedbackService.GetAllFeedbacksAsync(page, pageSize, cancellationToken);
-        logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
-        return Ok(feedbacks);
+        var result = await feedbackService.GetAllFeedbacksAsync(page, pageSize, cancellationToken);
+        logger.LogInformation("Retrieved {Count} feedbacks", result.Items.Count);
+        return Ok(result);
     }
 
     /// <summary>Update the status of a feedback request.</summary>

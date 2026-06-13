@@ -25,7 +25,7 @@ public class UserController(
     /// <response code="403">Access denied.</response>
     [HttpGet]
     [OutputCache(PolicyName = "AdminUsersListPolicy")]
-    [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
@@ -38,7 +38,7 @@ public class UserController(
 
         logger.LogInformation("Fetching user list. Page: {Page}, Size: {Size}", page, pageSize);
         var result = await service.GetAllUsers(page, pageSize, ct);
-        logger.LogInformation("Retrieved {Count} users", result.Count);
+        logger.LogInformation("Retrieved {Count} users", result.Items.Count);
         return Ok(result);
     }
 
@@ -59,7 +59,7 @@ public class UserController(
     {
         var user = await service.GetUserById(userId, cancellationToken);
         if (user == null)
-            return NotFound($"User with id={userId} not found");
+            throw new NotFoundException($"User with id={userId} not found");
         return Ok(user);
     }
 
@@ -73,7 +73,7 @@ public class UserController(
     /// <response code="403">Access denied.</response>
     /// <response code="404">User not found.</response>
     [HttpPatch("{userId:long}/comment")]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

@@ -25,6 +25,7 @@ public class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepos
         {
             TokenHash = HashToken(token),
             UserId = userId,
+            CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         });
 

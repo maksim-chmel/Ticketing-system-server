@@ -7,11 +7,13 @@ using AdminPanelBack.Services.Feedback;
 using AdminPanelBack.Services.User;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AdminPanelBack.Controllers;
 
 /// <summary>Telegram bot API (authenticated via X-Api-Key header).</summary>
 [ServiceFilter(typeof(ApiKeyAuthFilter))]
+[EnableRateLimiting("bot")]
 [ApiController]
 [Route("api/operator")]
 public class BotFeedbackController(

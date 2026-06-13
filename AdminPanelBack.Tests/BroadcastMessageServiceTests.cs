@@ -31,27 +31,26 @@ public class BroadcastMessageServiceTests
     }
 
     [Fact]
-    public async Task GetActiveBroadcastMessagesAndMakeInactive_WhenMessagesExist_DeactivatesAllAndSaves()
+    public async Task GetActiveBroadcastMessagesAndMakeInactive_WhenMessagesExist_ReturnsPulledMessages()
     {
         var messages = new List<BroadcastMessage>
         {
-            new() { Message = "msg1", IsActive = true },
-            new() { Message = "msg2", IsActive = true }
+            new() { Message = "msg1", IsActive = false },
+            new() { Message = "msg2", IsActive = false }
         };
-        _mockRepo.Setup(r => r.GetActiveBroadcastMessagesToList(It.IsAny<CancellationToken>())).ReturnsAsync(messages);
+        _mockRepo.Setup(r => r.PullActiveBroadcastMessagesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(messages);
 
         var result = await _service.GetActiveBroadcastMessagesAndMakeInactive();
 
         result.Should().HaveCount(2);
-        result.Should().AllSatisfy(m => m.IsActive.Should().BeFalse());
-        _mockRepo.Verify(r => r.UpdateBroadcastMessage(It.IsAny<BroadcastMessage>()), Times.Exactly(2));
-        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(r => r.PullActiveBroadcastMessagesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task GetActiveBroadcastMessagesAndMakeInactive_WhenNoMessages_ReturnsEmptyAndDoesNotSave()
+    public async Task GetActiveBroadcastMessagesAndMakeInactive_WhenNoMessages_ReturnsEmpty()
     {
-        _mockRepo.Setup(r => r.GetActiveBroadcastMessagesToList(It.IsAny<CancellationToken>()))
+        _mockRepo.Setup(r => r.PullActiveBroadcastMessagesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BroadcastMessage>());
 
         var result = await _service.GetActiveBroadcastMessagesAndMakeInactive();

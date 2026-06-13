@@ -17,8 +17,6 @@ public class RefreshTokenService(ILogger<RefreshTokenService> logger, IRefreshTo
     {
         logger.LogInformation("Validating refresh token for user {UserId}", userId);
         var isValid = await refreshTokenRepository.ValidateRefreshTokenAsync(token, userId, cancellationToken);
-        if (isValid)
-            await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Token validation result for user {UserId}: {IsValid}", userId, isValid);
         return isValid;
     }
@@ -42,8 +40,6 @@ public class RefreshTokenService(ILogger<RefreshTokenService> logger, IRefreshTo
     {
         logger.LogInformation("Fetching refresh token");
         var token = await refreshTokenRepository.GetRefreshTokenAsync(refreshToken, cancellationToken);
-        if (token != null)
-            await unitOfWork.SaveChangesAsync(cancellationToken);
         return token;
     }
 }

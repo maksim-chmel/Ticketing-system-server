@@ -14,11 +14,11 @@ public class StatisticsService(IStatisticsRepository repository, IMapper mapper,
         return mapper.Map<List<StatusDistributionDto>>(data);
     }
 
-    public async Task<List<TimeDisrtibutionDto>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default)
+    public async Task<List<TimeDistributionDto>> GetRequestsOverTimeAsync(CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Fetching requests over time statistics");
         var list = await repository.GetRequestsOverTimeAsync(cancellationToken);
         logger.LogInformation("Retrieved {Count} time distribution entries", list.Count);
-        return mapper.Map<List<TimeDisrtibutionDto>>(list);
+        return mapper.Map<List<TimeDistributionDto>>(list);
     }
 }

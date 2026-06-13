@@ -20,16 +20,7 @@ public class BroadcastMessageService(IBroadcastMessageRepository repository, ILo
 
     public async Task<List<BroadcastMessage>> GetActiveBroadcastMessagesAndMakeInactive(CancellationToken cancellationToken = default)
     {
-        var list = await repository.GetActiveBroadcastMessagesToList(cancellationToken);
-        foreach (var msg in list)
-        {
-            msg.IsActive = false;
-            repository.UpdateBroadcastMessage(msg);
-        }
-        if (list.Count > 0)
-        {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-        }
+        var list = await repository.PullActiveBroadcastMessagesAsync(cancellationToken);
         logger.LogInformation("Deactivated {Count} broadcast messages", list.Count);
         return list;
     }

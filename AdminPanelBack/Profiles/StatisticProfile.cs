@@ -14,7 +14,7 @@ public class StatisticProfile:Profile
             .ForMember(dest => dest.Value, opt 
                 => opt.MapFrom(src => src.Count));
         
-        CreateMap<RequestsOverTimeItem, TimeDisrtibutionDto>()
+        CreateMap<RequestsOverTimeItem, TimeDistributionDto>()
             .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date.ToString("yyyy-MM-dd")))
             .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Count));
     }

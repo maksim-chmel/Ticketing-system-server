@@ -35,7 +35,7 @@ public class FeedbackServiceTests
             .Returns((UsersMessageDto dto) => new Feedback
             {
                 UserId = dto.UserId,
-                Comment = dto.Comment
+                Comment = dto.Comment ?? string.Empty
             });
     
         // Сервис использует репозиторий напрямую и unitOfWork только для сохранения
@@ -98,13 +98,16 @@ public class FeedbackServiceTests
         };
         _mockRepo.Setup(r => r.GetFeedbacksPageAsync(0, 50, It.IsAny<CancellationToken>()))
             .ReturnsAsync(feedbacks);
+        _mockRepo.Setup(r => r.GetCountAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
 
         // Act
         var result = await _service.GetAllFeedbacksAsync(1, 50);
 
         // Assert
-        result.Should().HaveCount(1);
-        result[0].Id.Should().Be(1);
+        result.Items.Should().HaveCount(1);
+        result.TotalCount.Should().Be(1);
+        result.Items[0].Id.Should().Be(1);
     }
 
     [Fact]

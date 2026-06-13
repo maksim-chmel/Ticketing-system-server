@@ -7,11 +7,13 @@ namespace AdminPanelBack.Services.User;
 
 public class UserService(IUserRepository repository, IMapper mapper, ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
 {
-    public async Task<List<UserDto>> GetAllUsers(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<UserDto>> GetAllUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var skip = (page - 1) * pageSize;
-        var users = await repository.GetUsersPageAsync(skip, pageSize, cancellationToken);
-        return mapper.Map<List<UserDto>>(users);
+        var usersTask = repository.GetUsersPageAsync(skip, pageSize, cancellationToken);
+        var countTask = repository.GetCountAsync(cancellationToken);
+        await Task.WhenAll(usersTask, countTask);
+        return new PagedResult<UserDto> { Items = mapper.Map<List<UserDto>>(usersTask.Result), TotalCount = countTask.Result };
     }
 
     public async Task<List<long>> GetAllUsersIds(CancellationToken cancellationToken = default)
@@ -19,7 +21,7 @@ public class UserService(IUserRepository repository, IMapper mapper, ILogger<Use
         return await repository.GetAllUserIdsAsync(cancellationToken);
     }
 
-    public async Task<Models.User?> ManageComment(long userId, string comment, CancellationToken cancellationToken = default)
+    public async Task<UserDto?> ManageComment(long userId, string comment, CancellationToken cancellationToken = default)
     {
         var user = await repository.FindAsyncById(userId, cancellationToken);
         if (user == null)
@@ -30,7 +32,7 @@ public class UserService(IUserRepository repository, IMapper mapper, ILogger<Use
         user.Comments = comment;
         await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Comment updated for user {UserId}", userId);
-        return user;
+        return mapper.Map<UserDto>(user);
     }
 
     public async Task RegistrationNewUser(UserDto userDto, CancellationToken cancellationToken = default)

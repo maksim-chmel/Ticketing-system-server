@@ -27,11 +27,11 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task FindAdminByUsernameOrThrow_WhenUserNotFound_ThrowsNotFoundException()
+    public async Task FindAdminByUsernameOrThrow_WhenUserNotFound_ThrowsUnauthorizedException()
     {
         _mockAdminRepository.Setup(r => r.FindByUsernameAsync("invalid_username")).ReturnsAsync((Admin?)null);
 
-        await _service.Invoking(s => s.FindAdminByUsernameOrThrow("invalid_username")).Should().ThrowAsync<NotFoundException>();
+        await _service.Invoking(s => s.FindAdminByUsernameOrThrow("invalid_username")).Should().ThrowAsync<UnauthorizedException>();
     }
 
     [Fact]
