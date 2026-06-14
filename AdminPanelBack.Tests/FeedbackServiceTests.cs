@@ -37,8 +37,7 @@ public class FeedbackServiceTests
                 UserId = dto.UserId,
                 Comment = dto.Comment ?? string.Empty
             });
-    
-        // Сервис использует репозиторий напрямую и unitOfWork только для сохранения
+        
         _service = new FeedbackService(_mockRepo.Object, mockMapper.Object, NullLogger<FeedbackService>.Instance, _mockUnitOfWork.Object);
     }
 

@@ -10,10 +10,9 @@ public class UserService(IUserRepository repository, IMapper mapper, ILogger<Use
     public async Task<PagedResult<UserDto>> GetAllUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var skip = (page - 1) * pageSize;
-        var usersTask = repository.GetUsersPageAsync(skip, pageSize, cancellationToken);
-        var countTask = repository.GetCountAsync(cancellationToken);
-        await Task.WhenAll(usersTask, countTask);
-        return new PagedResult<UserDto> { Items = mapper.Map<List<UserDto>>(usersTask.Result), TotalCount = countTask.Result };
+        var users = await repository.GetUsersPageAsync(skip, pageSize, cancellationToken);
+        var count = await repository.GetCountAsync(cancellationToken);
+        return new PagedResult<UserDto> { Items = mapper.Map<List<UserDto>>(users), TotalCount = count };
     }
 
     public async Task<List<long>> GetAllUsersIds(CancellationToken cancellationToken = default)

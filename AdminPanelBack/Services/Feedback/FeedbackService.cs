@@ -12,11 +12,10 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
     {
         logger.LogInformation("Fetching feedbacks page {Page} with size {PageSize}", page, pageSize);
         var skip = (page - 1) * pageSize;
-        var feedbacksTask = repository.GetFeedbacksPageAsync(skip, pageSize, cancellationToken);
-        var countTask = repository.GetCountAsync(cancellationToken);
-        await Task.WhenAll(feedbacksTask, countTask);
-        logger.LogInformation("Retrieved {Count} feedbacks", feedbacksTask.Result.Count);
-        return new PagedResult<FeedbackDto> { Items = mapper.Map<List<FeedbackDto>>(feedbacksTask.Result), TotalCount = countTask.Result };
+        var feedbacks = await repository.GetFeedbacksPageAsync(skip, pageSize, cancellationToken);
+        var count = await repository.GetCountAsync(cancellationToken);
+        logger.LogInformation("Retrieved {Count} feedbacks", feedbacks.Count);
+        return new PagedResult<FeedbackDto> { Items = mapper.Map<List<FeedbackDto>>(feedbacks), TotalCount = count };
     }
 
     public async Task<List<FeedbackDto>> GetAllUsersFeedbacksAsync(long userId, CancellationToken cancellationToken = default)
