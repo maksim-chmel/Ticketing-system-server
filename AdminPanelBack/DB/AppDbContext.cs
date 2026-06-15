@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Feedback> Feedbacks { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<BroadcastMessage> BroadcastMessages { get; set; }
+    public DbSet<FeedbackHistory> FeedbackHistories{ get; set;}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             .HasOne(f => f.User)
             .WithMany(u => u.Feedbacks)
             .HasForeignKey(f => f.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FeedbackHistory>()
+            .HasOne(h => h.Feedback)
+            .WithMany()
+            .HasForeignKey(h => h.FeedbackId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<RefreshToken>()

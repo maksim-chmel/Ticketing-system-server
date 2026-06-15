@@ -2,7 +2,7 @@ using AdminPanelBack.Models;
 
 namespace AdminPanelBack.Repository;
 
-public interface IUserRepository : IRepository<User>
+public interface IUserRepository : IRepository<User, long>
 {
     Task<List<long>> GetAllUserIdsAsync(CancellationToken cancellationToken = default);
     Task<List<User>> GetUsersPageAsync(int skip, int take, CancellationToken cancellationToken = default);

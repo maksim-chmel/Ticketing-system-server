@@ -1,12 +1,16 @@
 using AdminPanelBack.DTO;
 using AdminPanelBack.Exceptions;
+using AdminPanelBack.Hubs;
 using AdminPanelBack.Models;
 using AdminPanelBack.Repository;
 using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AdminPanelBack.Services.Feedback;
 
-public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILogger<FeedbackService> logger, IUnitOfWork unitOfWork) : IFeedbackService
+public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILogger<FeedbackService> logger,
+    IUnitOfWork unitOfWork, IFeedbackHistoryService historyService,
+    IHubContext<FeedbackHub> hubContext) : IFeedbackService
 {
     public async Task<PagedResult<FeedbackDto>> GetAllFeedbacksAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -26,7 +30,8 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
         return mapper.Map<List<FeedbackDto>>(feedbacks);
     }
 
-    public async Task UpdateStatus(int feedbackId, FeedbackStatus status, CancellationToken cancellationToken = default)
+    public async Task UpdateStatus(int feedbackId, FeedbackStatus status,string adminId,string adminName,
+        CancellationToken cancellationToken = default)
     {
         var feedback = await repository.FindAsyncById(feedbackId, cancellationToken);
         if (feedback == null)
@@ -34,7 +39,10 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
             logger.LogWarning("Feedback not found: {FeedbackId}", feedbackId);
             throw new NotFoundException($"Feedback not found: {feedbackId}");
         }
+        var oldStatus = feedback.Status.ToString();
         feedback.Status = status;
+        await historyService.AddAsync(feedbackId, adminId, adminName, FeedbackHistoryAction.StatusChanged,
+            oldStatus, status.ToString(), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Feedback {FeedbackId} status updated to {Status}", feedback.Id, status);
     }
@@ -45,6 +53,8 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
         await repository.AddFeedbackAsync(feedback, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Feedback created with id {FeedbackId}", feedback.Id);
+        var feedbackWithUser = await repository.FindByIdWithUserAsync(feedback.Id, cancellationToken);
+        await hubContext.Clients.All.SendAsync("newFeedback", mapper.Map<FeedbackDto>(feedbackWithUser), cancellationToken);
     }
 
     public async Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync(CancellationToken cancellationToken = default)
@@ -52,5 +62,22 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
         var newFeedbacks = await repository.PullUnsentToOperatorAsync(take: 100, cancellationToken: cancellationToken);
         logger.LogInformation("Successfully sent {Count} feedbacks to operator", newFeedbacks.Count);
         return mapper.Map<List<FeedbackDto>>(newFeedbacks);
+    }
+
+    public async Task ClaimAsync(int feedbackId,string adminId,string adminName, CancellationToken cancellationToken = default)
+    {
+        var feedback = await repository.FindAsyncById(feedbackId, cancellationToken);
+        if (feedback == null)
+        {
+            logger.LogWarning("Feedback not found: {FeedbackId}", feedbackId);
+            throw new NotFoundException($"Feedback not found: {feedbackId}");
+        }
+        feedback.AssignedAdminId = adminId;
+        feedback.AssignedAdminName = adminName;
+        await historyService.AddAsync(feedbackId, adminId, adminName, FeedbackHistoryAction.Claimed,
+            null, null, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Feedback {FeedbackId} assigned to admin {AdminId}", feedback.Id, adminId);
+        
     }
 }

@@ -84,6 +84,15 @@
       <Compile Update="Repository\RefreshTokenRepository.cs">
         <DependentUpon>IRefreshTokenRepository.cs</DependentUpon>
       </Compile>
+      <Compile Update="Repository\AdminRepository.cs">
+        <DependentUpon>IAdminRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Repository\FeedbackHistoryRepository.cs">
+        <DependentUpon>IFeedbackHistoryRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Services\Feedback\FeedbackHistoryService.cs">
+        <DependentUpon>IFeedbackHistoryService.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
     <ItemGroup>

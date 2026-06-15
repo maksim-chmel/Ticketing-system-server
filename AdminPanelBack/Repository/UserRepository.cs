@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Repository;
 
-public class UserRepository(AppDbContext context) : Repository<User>(context)
+public class UserRepository(AppDbContext context) : Repository<User, long>(context)
     , IUserRepository
 {
     private readonly AppDbContext _context = context;

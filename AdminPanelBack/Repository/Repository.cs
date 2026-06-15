@@ -1,17 +1,13 @@
 using AdminPanelBack.DB;
-using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanelBack.Repository;
 
-public abstract class Repository<T>(AppDbContext context) : IRepository<T>
+public abstract class Repository<T, TKey>(AppDbContext context) : IRepository<T, TKey>
     where T : class
 {
     protected AppDbContext Context { get; } = context;
 
-    public virtual async Task<T?> FindAsyncById(int id, CancellationToken cancellationToken = default) =>
-        await Context.Set<T>().FindAsync([id], cancellationToken);
-
-    public virtual async Task<T?> FindAsyncById(long id, CancellationToken cancellationToken = default) =>
+    public virtual async Task<T?> FindAsyncById(TKey id, CancellationToken cancellationToken = default) =>
         await Context.Set<T>().FindAsync([id], cancellationToken);
 
     public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default) =>

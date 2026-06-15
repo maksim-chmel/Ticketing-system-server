@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 using AdminPanelBack;
+using AdminPanelBack.Hubs;
 using AdminPanelBack.Swagger;
 using AdminPanelBack.DB;
 using AdminPanelBack.Middleware;
@@ -63,7 +64,10 @@ builder.Services.AddSwaggerGen(options =>
 
     options.OperationFilter<SecurityRequirementsFilter>();
 });
-builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddScoped<ApiKeyAuthFilter>();
@@ -145,9 +149,12 @@ builder.Services.AddScoped<IBroadcastMessageService, BroadcastMessageService>();
 builder.Services.AddScoped<IBroadcastMessageRepository, BroadcastMessageRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+builder.Services.AddScoped<IFeedbackHistoryRepository, FeedbackHistoryRepository>();
+builder.Services.AddScoped<IFeedbackHistoryService, FeedbackHistoryService>();
 builder.Services.AddAutoMapper(typeof(FeedbackProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddAutoMapper(typeof(StatisticProfile));
+builder.Services.AddAutoMapper(typeof(FeedbackHistoryProfile));
 builder.Services.AddRateLimiter(options =>
 {
     
@@ -301,6 +308,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseOutputCache();
 app.MapControllers();
+app.MapHub<FeedbackHub>("/hubs/feedback");
 app.MapPrometheusScrapingEndpoint("/metrics");
 
 try

@@ -11,5 +11,7 @@ public class FeedbackDto
     public string? Phone { get; set; }
     public DateTime Date { get; set; }
     public FeedbackStatus Status { get; set; }
+    public string? AssignedAdminId { get; set; }
+    public string? AssignedAdminName { get; set; }
    
 }

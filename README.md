@@ -1,34 +1,6 @@
 # Admin Panel Backend [![Cloud CI (GitHub-hosted)](https://github.com/maksim-chmel/AdminPanelBack/actions/workflows/ci-cloud.yml/badge.svg)](https://github.com/maksim-chmel/AdminPanelBack/actions/workflows/ci-cloud.yml)
 
-REST API backend for a support ticket management system. Part of a four-component platform — see [System Overview](#system-overview) below.
-
----
-
-## System Overview
-
-This project is one of four components that form a complete ticketing platform:
-
-| Repository | Technology | Role |
-|---|---|---|
-| **[AdminPanelBack](https://github.com/maksim-chmel/AdminPanelBack)** ← you are here | ASP.NET Core 8 | REST API, business logic, database |
-| [ticketing-system-ui](https://github.com/maksim-chmel/Ticketing-system-ui) | React 19 + TypeScript | Admin panel for coordinators |
-| [feedback_bot](https://github.com/maksim-chmel/feedback_bot) | Node.js + TypeScript | Telegram bot for end users |
-| [alarm_bot](https://github.com/maksim-chmel/alarm_bot) | Node.js + TypeScript | Telegram bot that notifies operators of new tickets |
-
-```
-User (Telegram)
-     │ creates ticket via feedback_bot
-     ▼
-PostgreSQL ◄──────────────────────────────────────────────────
-     │                                                        │
-     ├── alarm_bot polls every 15s → notifies operator       │
-     │                                                        │
-     └── AdminPanelBack (this repo) ─────────────────────────┘
-              │
-              ▼
-     ticketing-system-ui (admin panel)
-     Coordinators manage tickets, view stats, send broadcasts
-```
+REST API backend for a support ticket management system built with ASP.NET Core 8.
 
 ---
 
@@ -36,6 +8,9 @@ PostgreSQL ◄──────────────────────
 
 - **Authentication** — JWT access tokens + HttpOnly cookie refresh tokens with automatic rotation; rate limiting on login/refresh endpoints
 - **Ticket management** — view all feedback tickets (paginated), update status through a configurable lifecycle (`Open → InProgress → Waiting → Done / Rejected`)
+- **Ticket assignment** — admins can claim a ticket; `AssignedAdminId` / `AssignedAdminName` are stored on the ticket and returned in `FeedbackDto`
+- **Audit history** — every status change and claim is appended to `FeedbackHistory`; each entry records admin name, action, old/new values, and timestamp
+- **Real-time push** — SignalR hub at `/hubs/feedback` broadcasts a `newFeedback` event to all connected clients the moment a ticket is created via the bot API
 - **User management** — list users (paginated), add admin comments per user
 - **Broadcast messages** — queue system-wide messages delivered to all users via Telegram bot
 - **Statistics** — status distribution and requests-over-time aggregations for dashboard charts
@@ -69,14 +44,15 @@ PostgreSQL ◄──────────────────────
 ```
 AdminPanelBack/
 ├── Controllers/        # Auth, Feedback, User, Statistics, Broadcast, BotFeedback
-├── Services/           # Business logic (Auth, Login, Token, Feedback, User, …)
+├── Services/           # Business logic (Auth, Login, Token, Feedback, FeedbackHistory, User, …)
 ├── Repository/         # Data access layer with interface/implementation pairs
-├── Models/             # Domain models (Feedback, User, Admin, BroadcastMessage, …)
+├── Models/             # Domain models (Feedback, FeedbackHistory, User, Admin, BroadcastMessage, …)
 ├── DTO/                # Request/response DTOs
 ├── Validators/         # FluentValidation rules
 ├── Profiles/           # AutoMapper profiles
 ├── Middleware/         # ErrorHandlingMiddleware, ApiKeyAuthFilter,
 │                       # AuthorizedOutputCachePolicy
+├── Hubs/               # SignalR hubs (FeedbackHub)
 ├── DB/                 # AppDbContext
 └── Program.cs          # App bootstrap & DI composition
 ```
@@ -105,6 +81,8 @@ All routes are prefixed with `/api`.
 |---|---|---|---|
 | GET | `/feedbacks?page=&pageSize=` | Bearer | List all feedback tickets (cached, paginated) |
 | PATCH | `/feedbacks/{id:int}` | Bearer | Update ticket status (`UpdateFeedbackStatusRequest`) |
+| POST | `/feedbacks/{id:int}/claim` | Bearer | Claim ticket — assigns it to the current admin |
+| GET | `/feedbacks/{id:int}/history` | Bearer | Get audit history for a ticket (`FeedbackHistoryDto[]`) |
 
 ### Statistics
 | Method | Route | Auth | Description |
@@ -132,6 +110,26 @@ All routes are prefixed with `/api`.
 | Route | Description |
 |---|---|
 | `/metrics` | Prometheus scraping endpoint |
+
+---
+
+## Real-time (SignalR)
+
+The hub is mounted at `/hubs/feedback`.
+
+**Authentication** — pass the bot API key as the `access_token` query parameter:
+
+```
+ws://localhost:5101/hubs/feedback?access_token=dev-demo-api-key
+```
+
+**Events pushed by the server**
+
+| Event | Payload | When |
+|---|---|---|
+| `newFeedback` | `FeedbackDto` | A new ticket is created via the bot API |
+
+Clients connect with `HubConnectionBuilder` using `WithUrl("/hubs/feedback", o => o.AccessTokenProvider = () => Task.FromResult(apiKey))` or the equivalent query-string form shown above.
 
 ---
 
@@ -241,8 +239,3 @@ Read-heavy admin GET endpoints are cached in Redis with tag-based invalidation:
 
 `AuthorizedOutputCachePolicy` only stores successful `GET`/`HEAD` responses with status `200`. Mutations call `IOutputCacheStore.EvictByTagAsync` so related cache entries are cleared (e.g. updating a feedback evicts `feedbacks` and `statistics`).
 
----
-
-## Frontend Repository
-
-[Ticketing System UI](https://github.com/maksim-chmel/Ticketing-system-ui) — React 19 + TypeScript admin interface with Recharts dashboards, served via Nginx.

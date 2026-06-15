@@ -15,7 +15,7 @@ public class TokenService(ILogger<TokenService> logger, IOptions<JwtSettings> jw
     private readonly string _audience = jwtSettings.Value.Audience;
     private readonly int _expiresInMinutes = jwtSettings.Value.ExpiresInMinutes;
 
-    public string GenerateToken(string userId, string username, IList<string> roles)
+    public string GenerateToken(string userId, string username, string? displayName, IList<string> roles)
     {
         logger.LogInformation("Generating token for user {UserId} ({Username})", userId, username);
 
@@ -24,6 +24,7 @@ public class TokenService(ILogger<TokenService> logger, IOptions<JwtSettings> jw
             new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.UniqueName, username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.GivenName, displayName ?? username),
         };
 
         foreach (var role in roles)

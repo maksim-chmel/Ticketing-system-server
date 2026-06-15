@@ -81,7 +81,7 @@ public class LoginServiceTests
         _mockAuthService.Setup(a => a.CheckPasswordOrThrow(user, "password")).Returns(Task.CompletedTask);
         _mockAdminRepository.Setup(r => r.GetRolesAsync(user)).ReturnsAsync(new List<string>());
         _mockTokenService
-            .Setup(t => t.GenerateToken(user.Id, user.UserName!, It.IsAny<IList<string>>()))
+            .Setup(t => t.GenerateToken(user.Id, user.UserName!, It.IsAny<string>(), It.IsAny<IList<string>>()))
             .Returns("access_token");
         _mockRefreshTokenService
             .Setup(r => r.CreateRefreshTokenAsync(user.Id, It.IsAny<CancellationToken>()))

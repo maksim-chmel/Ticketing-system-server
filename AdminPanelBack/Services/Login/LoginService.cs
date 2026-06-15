@@ -48,7 +48,7 @@ public class LoginService(IAdminRepository adminRepository, ITokenService tokenS
     private async Task<(string accessToken, string refreshToken)> GenerateTokensAsync(Admin user, CancellationToken cancellationToken = default)
     {
         var roles = await adminRepository.GetRolesAsync(user);
-        var accessToken = tokenService.GenerateToken(user.Id, user.UserName!, roles);
+        var accessToken = tokenService.GenerateToken(user.Id, user.UserName!, user.Name, roles);
         var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(user.Id, cancellationToken);
         logger.LogInformation("Tokens successfully issued for admin {Username} (Id: {UserId})", user.UserName, user.Id);
         return (accessToken, refreshToken);

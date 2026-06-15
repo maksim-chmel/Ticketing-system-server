@@ -2,7 +2,7 @@ using AdminPanelBack.Models;
 
 namespace AdminPanelBack.Repository;
 
-public interface IBroadcastMessageRepository: IRepository<BroadcastMessage>
+public interface IBroadcastMessageRepository: IRepository<BroadcastMessage, int>
 {
     void AddBroadcastMessage(BroadcastMessage message);
     Task<List<BroadcastMessage>> PullActiveBroadcastMessagesAsync(CancellationToken cancellationToken = default);

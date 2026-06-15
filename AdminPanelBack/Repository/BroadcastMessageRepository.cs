@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AdminPanelBack.Repository;
 
 public sealed class BroadcastMessageRepository(AppDbContext dbContext)
-    : Repository<BroadcastMessage>(dbContext), IBroadcastMessageRepository
+    : Repository<BroadcastMessage, int>(dbContext), IBroadcastMessageRepository
 {
 
     public void AddBroadcastMessage(BroadcastMessage message)

@@ -27,29 +27,29 @@ public class TokenServiceTests
     [Fact]
     public void GenerateToken_WithValidData_ReturnsNonEmptyToken()
     {
-        var result = _service.GenerateToken("test", "test", new List<string>());
+        var result = _service.GenerateToken("test", "test", "Test User", new List<string>());
         result.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
     public void GenerateToken_ForDifferentUsers_ReturnsUniqueTokens()
     {
-        var token1 = _service.GenerateToken("test1", "test1", new List<string>());
-        var token2 = _service.GenerateToken("test2", "test2", new List<string>());
+        var token1 = _service.GenerateToken("test1", "test1", "User One", new List<string>());
+        var token2 = _service.GenerateToken("test2", "test2", "User Two", new List<string>());
         token1.Should().NotBe(token2);
     }
 
     [Fact]
     public void GenerateToken_ReturnsTokenWithMinimumLength()
     {
-        var result = _service.GenerateToken("test", "test", new List<string>());
+        var result = _service.GenerateToken("test", "test", "Test User", new List<string>());
         result.Length.Should().BeGreaterThan(10);
     }
 
     [Fact]
     public void GenerateToken_WithRoles_ReturnsNonEmptyToken()
     {
-        var result = _service.GenerateToken("test", "test", new List<string> { "Admin" });
+        var result = _service.GenerateToken("test", "test", "Test User", new List<string> { "Admin" });
         result.Should().NotBeNullOrEmpty();
     }
 }

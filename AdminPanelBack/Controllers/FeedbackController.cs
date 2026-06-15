@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AdminPanelBack.DTO;
 using AdminPanelBack.Services.Feedback;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ namespace AdminPanelBack.Controllers;
 [Route("api/feedbacks")]
 public class FeedbackController(
     IFeedbackService feedbackService,
+    IFeedbackHistoryService feedbackHistoryService,
     IOutputCacheStore outputCacheStore,
     ILogger<FeedbackController> logger) : ControllerBase
 {
@@ -58,9 +60,48 @@ public class FeedbackController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateFeedbackStatusRequest request, CancellationToken cancellationToken)
     {
-        await feedbackService.UpdateStatus(id, request.Status, cancellationToken);
+        var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var adminName = User.FindFirstValue(ClaimTypes.GivenName)!;
+        await feedbackService.UpdateStatus(id, request.Status, adminId, adminName, cancellationToken);
         await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
         await outputCacheStore.EvictByTagAsync("statistics", cancellationToken);
         return NoContent();
+    }
+    
+    /// <summary>Claim a feedback ticket — assign it to the current admin.</summary>
+    /// <param name="id">The feedback request identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="204">Ticket claimed successfully.</response>
+    /// <response code="401">Unauthorized.</response>
+    /// <response code="403">Access denied.</response>
+    /// <response code="404">Feedback request not found.</response>
+    [HttpPost("{id:int}/claim")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Claim(int id, CancellationToken cancellationToken)
+    {
+        var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var adminName = User.FindFirstValue(ClaimTypes.GivenName)!;
+        await feedbackService.ClaimAsync(id, adminId, adminName, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Get the history of a feedback ticket.</summary>
+    /// <param name="id">The feedback request identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">A list of history entries.</response>
+    /// <response code="401">Unauthorized.</response>
+    /// <response code="403">Access denied.</response>
+    [HttpGet("{id:int}/history")]
+    [ProducesResponseType(typeof(List<FeedbackHistoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<List<FeedbackHistoryDto>>> GetHistory(int id, CancellationToken cancellationToken)
+    {
+        var history = await feedbackHistoryService.GetByFeedbackIdAsync(id, cancellationToken);
+        return Ok(history);
     }
 }

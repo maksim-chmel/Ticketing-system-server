@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace AdminPanelBack.Repository;
 
 public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackRepository> logger)
-    : Repository<Feedback>(dbContext), IFeedbackRepository
+    : Repository<Feedback, int>(dbContext), IFeedbackRepository
 {
-
     public Task<List<Feedback>> GetFeedbacksPageAsync(int skip, int take, CancellationToken cancellationToken = default) =>
         Context.Feedbacks
             .AsNoTracking()
@@ -34,6 +33,11 @@ public class FeedbackRepository(AppDbContext dbContext, ILogger<FeedbackReposito
     {
         await Context.Feedbacks.AddAsync(feedback, cancellationToken);
     }
+
+    public Task<Feedback?> FindByIdWithUserAsync(int id, CancellationToken cancellationToken = default) =>
+        Context.Feedbacks
+            .Include(f => f.User)
+            .FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
 
     public void UpdateFeedback(Feedback feedback)
     {
