@@ -57,13 +57,6 @@ public class FeedbackService(IFeedbackRepository repository, IMapper mapper, ILo
         await hubContext.Clients.All.SendAsync("newFeedback", mapper.Map<FeedbackDto>(feedbackWithUser), cancellationToken);
     }
 
-    public async Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync(CancellationToken cancellationToken = default)
-    {
-        var newFeedbacks = await repository.PullUnsentToOperatorAsync(take: 100, cancellationToken: cancellationToken);
-        logger.LogInformation("Successfully sent {Count} feedbacks to operator", newFeedbacks.Count);
-        return mapper.Map<List<FeedbackDto>>(newFeedbacks);
-    }
-
     public async Task ClaimAsync(int feedbackId,string adminId,string adminName, CancellationToken cancellationToken = default)
     {
         var feedback = await repository.FindAsyncById(feedbackId, cancellationToken);

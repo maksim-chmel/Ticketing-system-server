@@ -117,17 +117,5 @@ public class BotFeedbackController(
         return Ok(messages);
     }
 
-    /// <summary>Get unprocessed feedback requests and mark them as sent to the operator.</summary>
-    /// <remarks>Atomic operation: retrieves up to 100 unprocessed requests and immediately marks them as sent.</remarks>
-    /// <response code="200">A list of unprocessed feedback requests.</response>
-    /// <response code="401">Invalid or missing API key.</response>
-    [HttpPost("unnotified-feedback-pulls")]
-    [ProducesResponseType(typeof(List<FeedbackDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> PullUnnotifiedFeedbacks(CancellationToken cancellationToken)
-    {
-        var list = await feedbackService.GetNewFeedbacksForOperatorAsync(cancellationToken);
-        await outputCacheStore.EvictByTagAsync("feedbacks", cancellationToken);
-        return Ok(list);
-    }
+    
 }

@@ -127,21 +127,6 @@ public class FeedbackServiceTests
     }
 
     [Fact]
-    public async Task GetNewFeedbacksForOperatorAsync_ReturnsPulledFeedbacks()
-    {
-        var feedbacks = new List<Feedback>
-        {
-            new() { Id = 1, UserId = 1, Comment = "test" }
-        };
-        _mockRepo.Setup(r => r.PullUnsentToOperatorAsync(100, It.IsAny<CancellationToken>())).ReturnsAsync(feedbacks);
-
-        var result = await _service.GetNewFeedbacksForOperatorAsync();
-
-        result.Should().HaveCount(1);
-        result[0].Id.Should().Be(1);
-    }
-
-    [Fact]
     public async Task ClaimAsync_WhenFeedbackExists_AssignsAdminAndSaves()
     {
         var feedback = new Feedback { Id = 1, Status = FeedbackStatus.Open };

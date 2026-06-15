@@ -10,5 +10,4 @@ public interface IFeedbackRepository: IRepository<Feedback, int>
     Task<List<Feedback>> GetUserFeedbacksAsync(long userId, CancellationToken cancellationToken = default);
     void UpdateFeedback(Feedback feedback);
     Task<Feedback?> FindByIdWithUserAsync(int id, CancellationToken cancellationToken = default);
-    Task<List<Feedback>> PullUnsentToOperatorAsync(int take, CancellationToken cancellationToken = default);
 }

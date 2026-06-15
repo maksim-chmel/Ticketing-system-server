@@ -104,7 +104,6 @@ All routes are prefixed with `/api`.
 | PUT | `/operator/users/{userId:long}` | `X-Api-Key` | Upsert user (`UserDto`), returns `204` |
 | GET | `/operator/users/{userId:long}/feedbacks` | `X-Api-Key` | List feedbacks for a user |
 | POST | `/operator/broadcast-message-pulls` | `X-Api-Key` | Pull active broadcast messages and mark them inactive |
-| POST | `/operator/unnotified-feedback-pulls` | `X-Api-Key` | Pull unnotified feedbacks and mark them as sent to operator |
 
 ### Metrics
 | Route | Description |

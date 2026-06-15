@@ -11,6 +11,5 @@ public interface IFeedbackService
       CancellationToken cancellationToken = default);
    public Task CreateFeedbackAsync(UsersMessageDto dto, CancellationToken cancellationToken = default);
    Task<List<FeedbackDto>> GetAllUsersFeedbacksAsync(long userId, CancellationToken cancellationToken = default);
-   Task<List<FeedbackDto>> GetNewFeedbacksForOperatorAsync(CancellationToken cancellationToken = default);
-   Task ClaimAsync(int feedbackId, string adminId, string adminName, CancellationToken cancellationToken = default);
+Task ClaimAsync(int feedbackId, string adminId, string adminName, CancellationToken cancellationToken = default);
 }

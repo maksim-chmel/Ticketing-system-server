@@ -15,8 +15,6 @@ public class Feedback
     
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public FeedbackStatus Status { get; set; }
-    public bool IsSentToOperator { get; set; } = false;
-    
     public string? AssignedAdminId { get; set; }
     [MaxLength(100)]
     public string? AssignedAdminName { get; set; }
